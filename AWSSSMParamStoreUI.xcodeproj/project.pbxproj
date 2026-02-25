@@ -1,0 +1,637 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9CECF3332EDE529A00A17A87 /* AWSClientRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 9CECF3322EDE529A00A17A87 /* AWSClientRuntime */; };
+		9CECF3352EDE529A00A17A87 /* AWSSSM in Frameworks */ = {isa = PBXBuildFile; productRef = 9CECF3342EDE529A00A17A87 /* AWSSSM */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9CECF2F12EDE4CED00A17A87 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9CECF2D92EDE4CEB00A17A87 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9CECF2E02EDE4CEB00A17A87;
+			remoteInfo = AWSSSMParamStoreUI;
+		};
+		9CECF2FB2EDE4CED00A17A87 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9CECF2D92EDE4CEB00A17A87 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9CECF2E02EDE4CEB00A17A87;
+			remoteInfo = AWSSSMParamStoreUI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		9CECF2E12EDE4CEB00A17A87 /* AWSSSMParamStoreUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AWSSSMParamStoreUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CECF2F02EDE4CED00A17A87 /* AWSSSMParamStoreUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AWSSSMParamStoreUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CECF2FA2EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AWSSSMParamStoreUIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9C5C474C2F1D9858003A6E7E /* Exceptions for "AWSSSMParamStoreUI" folder in "AWSSSMParamStoreUI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9CECF2E02EDE4CEB00A17A87 /* AWSSSMParamStoreUI */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		9CECF2E32EDE4CEB00A17A87 /* AWSSSMParamStoreUI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9C5C474C2F1D9858003A6E7E /* Exceptions for "AWSSSMParamStoreUI" folder in "AWSSSMParamStoreUI" target */,
+			);
+			path = AWSSSMParamStoreUI;
+			sourceTree = "<group>";
+		};
+		9CECF2F32EDE4CED00A17A87 /* AWSSSMParamStoreUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AWSSSMParamStoreUITests;
+			sourceTree = "<group>";
+		};
+		9CECF2FD2EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AWSSSMParamStoreUIUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9CECF2DE2EDE4CEB00A17A87 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9CECF3352EDE529A00A17A87 /* AWSSSM in Frameworks */,
+				9CECF3332EDE529A00A17A87 /* AWSClientRuntime in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CECF2ED2EDE4CED00A17A87 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CECF2F72EDE4CED00A17A87 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9CECF2D82EDE4CEB00A17A87 = {
+			isa = PBXGroup;
+			children = (
+				9CECF2E32EDE4CEB00A17A87 /* AWSSSMParamStoreUI */,
+				9CECF2F32EDE4CED00A17A87 /* AWSSSMParamStoreUITests */,
+				9CECF2FD2EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests */,
+				9CECF2E22EDE4CEB00A17A87 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9CECF2E22EDE4CEB00A17A87 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9CECF2E12EDE4CEB00A17A87 /* AWSSSMParamStoreUI.app */,
+				9CECF2F02EDE4CED00A17A87 /* AWSSSMParamStoreUITests.xctest */,
+				9CECF2FA2EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9CECF2E02EDE4CEB00A17A87 /* AWSSSMParamStoreUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9CECF3042EDE4CED00A17A87 /* Build configuration list for PBXNativeTarget "AWSSSMParamStoreUI" */;
+			buildPhases = (
+				9CECF2DD2EDE4CEB00A17A87 /* Sources */,
+				9CECF2DE2EDE4CEB00A17A87 /* Frameworks */,
+				9CECF2DF2EDE4CEB00A17A87 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9CECF2E32EDE4CEB00A17A87 /* AWSSSMParamStoreUI */,
+			);
+			name = AWSSSMParamStoreUI;
+			packageProductDependencies = (
+				9CECF3322EDE529A00A17A87 /* AWSClientRuntime */,
+				9CECF3342EDE529A00A17A87 /* AWSSSM */,
+			);
+			productName = AWSSSMParamStoreUI;
+			productReference = 9CECF2E12EDE4CEB00A17A87 /* AWSSSMParamStoreUI.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9CECF2EF2EDE4CED00A17A87 /* AWSSSMParamStoreUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9CECF3072EDE4CED00A17A87 /* Build configuration list for PBXNativeTarget "AWSSSMParamStoreUITests" */;
+			buildPhases = (
+				9CECF2EC2EDE4CED00A17A87 /* Sources */,
+				9CECF2ED2EDE4CED00A17A87 /* Frameworks */,
+				9CECF2EE2EDE4CED00A17A87 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9CECF2F22EDE4CED00A17A87 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9CECF2F32EDE4CED00A17A87 /* AWSSSMParamStoreUITests */,
+			);
+			name = AWSSSMParamStoreUITests;
+			packageProductDependencies = (
+			);
+			productName = AWSSSMParamStoreUITests;
+			productReference = 9CECF2F02EDE4CED00A17A87 /* AWSSSMParamStoreUITests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		9CECF2F92EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9CECF30A2EDE4CED00A17A87 /* Build configuration list for PBXNativeTarget "AWSSSMParamStoreUIUITests" */;
+			buildPhases = (
+				9CECF2F62EDE4CED00A17A87 /* Sources */,
+				9CECF2F72EDE4CED00A17A87 /* Frameworks */,
+				9CECF2F82EDE4CED00A17A87 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9CECF2FC2EDE4CED00A17A87 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9CECF2FD2EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests */,
+			);
+			name = AWSSSMParamStoreUIUITests;
+			packageProductDependencies = (
+			);
+			productName = AWSSSMParamStoreUIUITests;
+			productReference = 9CECF2FA2EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9CECF2D92EDE4CEB00A17A87 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					9CECF2E02EDE4CEB00A17A87 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					9CECF2EF2EDE4CED00A17A87 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 9CECF2E02EDE4CEB00A17A87;
+					};
+					9CECF2F92EDE4CED00A17A87 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 9CECF2E02EDE4CEB00A17A87;
+					};
+				};
+			};
+			buildConfigurationList = 9CECF2DC2EDE4CEB00A17A87 /* Build configuration list for PBXProject "AWSSSMParamStoreUI" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9CECF2D82EDE4CEB00A17A87;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9CECF3312EDE529A00A17A87 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9CECF2E22EDE4CEB00A17A87 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9CECF2E02EDE4CEB00A17A87 /* AWSSSMParamStoreUI */,
+				9CECF2EF2EDE4CED00A17A87 /* AWSSSMParamStoreUITests */,
+				9CECF2F92EDE4CED00A17A87 /* AWSSSMParamStoreUIUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9CECF2DF2EDE4CEB00A17A87 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CECF2EE2EDE4CED00A17A87 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CECF2F82EDE4CED00A17A87 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9CECF2DD2EDE4CEB00A17A87 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CECF2EC2EDE4CED00A17A87 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CECF2F62EDE4CED00A17A87 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9CECF2F22EDE4CED00A17A87 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9CECF2E02EDE4CEB00A17A87 /* AWSSSMParamStoreUI */;
+			targetProxy = 9CECF2F12EDE4CED00A17A87 /* PBXContainerItemProxy */;
+		};
+		9CECF2FC2EDE4CED00A17A87 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9CECF2E02EDE4CEB00A17A87 /* AWSSSMParamStoreUI */;
+			targetProxy = 9CECF2FB2EDE4CED00A17A87 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		9CECF3022EDE4CED00A17A87 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9CECF3032EDE4CED00A17A87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		9CECF3052EDE4CED00A17A87 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AWSSSMParamStoreUI/AWSSSMParamStoreUI.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AWSSSMParamStoreUI/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bilal-fazlani.aws-ssm-param-store-ui";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9CECF3062EDE4CED00A17A87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AWSSSMParamStoreUI/AWSSSMParamStoreUI.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AWSSSMParamStoreUI/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bilal-fazlani.aws-ssm-param-store-ui";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9CECF3082EDE4CED00A17A87 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bilal-fazlani.aws-ssm-param-store-ui.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AWSSSMParamStoreUI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AWSSSMParamStoreUI";
+			};
+			name = Debug;
+		};
+		9CECF3092EDE4CED00A17A87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bilal-fazlani.aws-ssm-param-store-ui.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AWSSSMParamStoreUI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AWSSSMParamStoreUI";
+			};
+			name = Release;
+		};
+		9CECF30B2EDE4CED00A17A87 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bilal-fazlani.aws-ssm-param-store-ui.uitests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = AWSSSMParamStoreUI;
+			};
+			name = Debug;
+		};
+		9CECF30C2EDE4CED00A17A87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 6P85FFF835;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bilal-fazlani.aws-ssm-param-store-ui.uitests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = AWSSSMParamStoreUI;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9CECF2DC2EDE4CEB00A17A87 /* Build configuration list for PBXProject "AWSSSMParamStoreUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9CECF3022EDE4CED00A17A87 /* Debug */,
+				9CECF3032EDE4CED00A17A87 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9CECF3042EDE4CED00A17A87 /* Build configuration list for PBXNativeTarget "AWSSSMParamStoreUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9CECF3052EDE4CED00A17A87 /* Debug */,
+				9CECF3062EDE4CED00A17A87 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9CECF3072EDE4CED00A17A87 /* Build configuration list for PBXNativeTarget "AWSSSMParamStoreUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9CECF3082EDE4CED00A17A87 /* Debug */,
+				9CECF3092EDE4CED00A17A87 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9CECF30A2EDE4CED00A17A87 /* Build configuration list for PBXNativeTarget "AWSSSMParamStoreUIUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9CECF30B2EDE4CED00A17A87 /* Debug */,
+				9CECF30C2EDE4CED00A17A87 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9CECF3312EDE529A00A17A87 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/awslabs/aws-sdk-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.7;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9CECF3322EDE529A00A17A87 /* AWSClientRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9CECF3312EDE529A00A17A87 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSClientRuntime;
+		};
+		9CECF3342EDE529A00A17A87 /* AWSSSM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9CECF3312EDE529A00A17A87 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSSSM;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 9CECF2D92EDE4CEB00A17A87 /* Project object */;
+}
