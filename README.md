@@ -34,18 +34,18 @@ The app supports keyboard shortcuts for common actions.
 ![Keyboard shortcuts](readme-imgs/shortcuts.png)
 
 ### Find parameter
-![Find parameters](readme-imgs/find-configs.png)
 The app supports finding parameters by name or path.
 The find interface is very fast and allows searching in the path and values of the parameters.
+![Find parameters](readme-imgs/find-configs.png)
 
 ### Multi region support
-![Multi region support](readme-imgs/switch-regions.png)
 The app supports easy switching between regions while maintaining current navigation context where possible.
+![Multi region support](readme-imgs/switch-regions.png)
 
 ### Add parameter
 Easy to add new parameters with `⇧⌘N`
-![Add parameter](readme-imgs/add-new-param.png)
 Secure string values are supported.
+![Add parameter](readme-imgs/add-new-param.png)
 
 
 
