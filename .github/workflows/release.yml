@@ -37,7 +37,8 @@ jobs:
             -scheme AWSSSMParamStoreUI \
             -destination "generic/platform=macOS" \
             -archivePath "$RUNNER_TEMP/AWSSSMParamStoreUI.xcarchive" \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application: Bilal Fazlani (6P85FFF835)" \
             DEVELOPMENT_TEAM=6P85FFF835
 
       - name: Export .app
