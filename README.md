@@ -59,16 +59,16 @@ Easy to add new parameters with `⌘` + `⇧` + `N`
 
 Secure string values are supported
 
-Any level of the hierarchy can be added to
+Supports adding parameters to any level of the hierarchy
 
 ![Add parameter](readme-imgs/add-new-param.png)
 
 ### Delete / parameter
-Context menu to 
+use the context menu to 
 
-- delete parameters 
+- delete parameters
 - delete folders
 - copy paths
-- copy values
+- copy string and secure string values
 
 ![Delete parameter](readme-imgs/delete-copy-param.png)
