@@ -28,7 +28,16 @@ The app supports dark and light mode depending on the system appearance
 
 View nested folders and parameters
 
-### Delete / parameter
+### Add parameter
+Easy to add new parameters with `⌘` + `⇧` + `N`
+
+Secure string values are supported
+
+Supports adding parameters to any level of the hierarchy
+
+![Add parameter](readme-imgs/nested-add-secrets.png)
+
+### Delete / Copy parameters
 use the context menu to 
 
 - delete parameters
@@ -61,13 +70,6 @@ The app supports easy switching between regions while maintaining current naviga
 
 ![Multi region support](readme-imgs/region-shortcuts.png)
 
-### Add parameter
-Easy to add new parameters with `⌘` + `⇧` + `N`
 
-Secure string values are supported
-
-Supports adding parameters to any level of the hierarchy
-
-![Add parameter](readme-imgs/nested-add-secrets.png)
 
 
