@@ -147,7 +147,7 @@ struct ConnectionCard: View {
                 // Colored icon badge
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(typeColor.gradient)
+                        .fill(typeColor.opacity(0.75).gradient)
                         .frame(width: 46, height: 46)
                     Image(systemName: connection.type.icon)
                         .foregroundStyle(.white)
