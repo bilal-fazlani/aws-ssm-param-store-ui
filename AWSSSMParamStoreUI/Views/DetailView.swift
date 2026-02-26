@@ -9,8 +9,13 @@ struct DetailView: View {
     @State private var editedValue: String = ""
     @State private var isSaving: Bool = false
     @State private var showDeleteConfirmation: Bool = false
+    @State private var isValueRevealed: Bool = false
     @FocusState private var isEditorFocused: Bool
-    
+
+    private var isSecureString: Bool {
+        node.type == "SecureString"
+    }
+
     private var hasChanges: Bool {
         editedValue != node.serverValue
     }
@@ -31,25 +36,56 @@ struct DetailView: View {
             
             // Text editor — or loading state while Phase 2 value fetch is in flight
             if node.isValueLoaded {
-                TextEditor(text: $editedValue)
-                    .font(.system(.body, design: .monospaced))
-                    .scrollContentBackground(.hidden)
-                    .padding()
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(
+                if isSecureString && !isValueRevealed {
+                    // Masked overlay for hidden SecureString values
+                    ZStack {
                         RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(hasChanges ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
-                    )
-                    .padding()
-                    .focused($isEditorFocused)
-                    .onKeyPress(.leftArrow) {
-                        // At cursor position 0 with no selection → return focus to sidebar
-                        guard let tv = NSApp.keyWindow?.firstResponder as? NSTextView,
-                              tv.selectedRange.location == 0,
-                              tv.selectedRange.length == 0 else { return .ignored }
-                        onNavigateToSidebar()
-                        return .handled
+                            .fill(.regularMaterial)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                            )
+
+                        VStack(spacing: 12) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 28, weight: .medium))
+                                .foregroundStyle(.red)
+                            Text("Value hidden")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    isValueRevealed = true
+                                }
+                            } label: {
+                                Label("Reveal Value", systemImage: "eye")
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
                     }
+                    .padding()
+                } else {
+                    TextEditor(text: $editedValue)
+                        .font(.system(.body, design: .monospaced))
+                        .scrollContentBackground(.hidden)
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(hasChanges ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
+                        )
+                        .padding()
+                        .focused($isEditorFocused)
+                        .onKeyPress(.leftArrow) {
+                            // At cursor position 0 with no selection → return focus to sidebar
+                            guard let tv = NSApp.keyWindow?.firstResponder as? NSTextView,
+                                  tv.selectedRange.location == 0,
+                                  tv.selectedRange.length == 0 else { return .ignored }
+                            onNavigateToSidebar()
+                            return .handled
+                        }
+                }
             } else {
                 VStack(spacing: 12) {
                     ProgressView()
@@ -82,7 +118,22 @@ struct DetailView: View {
                     Label("Revert", systemImage: "arrow.counterclockwise")
                 }
                 .disabled(!hasChanges)
-                
+
+                // Reveal / Hide toggle — only for SecureString
+                if isSecureString {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            isValueRevealed.toggle()
+                        }
+                    } label: {
+                        Label(
+                            isValueRevealed ? "Hide" : "Reveal",
+                            systemImage: isValueRevealed ? "eye.slash" : "eye"
+                        )
+                    }
+                    .help(isValueRevealed ? "Hide value" : "Reveal value")
+                }
+
                 Spacer()
                 
                 // Last modified info
@@ -135,12 +186,16 @@ struct DetailView: View {
         }
         .onAppear {
             editedValue = node.value ?? ""
+            isValueRevealed = false
             // focusRequest may already be true if selection + focus were set in the same
             // state batch — onChange won't fire on a newly-created view, so check here too
             if focusRequest {
                 focusRequest = false
                 DispatchQueue.main.async { isEditorFocused = true }
             }
+        }
+        .onChange(of: node.id) { _, _ in
+            isValueRevealed = false
         }
         .onChange(of: focusRequest) { _, requested in
             guard requested else { return }
