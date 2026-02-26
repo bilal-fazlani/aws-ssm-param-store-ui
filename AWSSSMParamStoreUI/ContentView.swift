@@ -131,6 +131,8 @@ struct ContentView: View {
         .navigationSubtitle(lastUpdatedText)
         .toast(message: $appState.toastMessage, icon: "arrow.triangle.2.circlepath")
         .errorToast(message: $appState.errorMessage)
+        .updateToast(version: $appState.availableUpdateVersion)
+        .onAppear { appState.checkForUpdates() }
         .toolbar {
             // Navigation: Home & Back buttons grouped
             ToolbarItemGroup(placement: .navigation) {

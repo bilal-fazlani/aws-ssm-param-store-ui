@@ -22,6 +22,7 @@ class AppState: ObservableObject {
     @Published var errorMessage: String?
     @Published var toastMessage: String?
     @Published var isConnected: Bool = false
+    @Published var availableUpdateVersion: String?
     
     private let service = SSMService()
     private var toastTask: Task<Void, Never>?
@@ -429,6 +430,15 @@ class AppState: ObservableObject {
         return nil
     }
     
+    // MARK: - Update Check
+
+    func checkForUpdates() {
+        Task {
+            let checker = UpdateCheckerService()
+            availableUpdateVersion = await checker.checkForUpdate()
+        }
+    }
+
     // MARK: - Toast
     
     func showToast(_ message: String, duration: TimeInterval = 2.0) {

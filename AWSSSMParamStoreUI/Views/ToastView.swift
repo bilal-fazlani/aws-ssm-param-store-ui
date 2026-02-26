@@ -3,6 +3,7 @@ import SwiftUI
 enum ToastStyle {
     case info
     case error
+    case update
     
     var gradient: LinearGradient {
         switch self {
@@ -24,6 +25,15 @@ enum ToastStyle {
                 startPoint: .leading,
                 endPoint: .trailing
             )
+        case .update:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.1, green: 0.65, blue: 0.35),
+                    Color(red: 0.0, green: 0.5, blue: 0.3)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
         }
     }
     
@@ -33,6 +43,8 @@ enum ToastStyle {
             return Color(red: 0.4, green: 0.4, blue: 1.0).opacity(0.4)
         case .error:
             return Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.4)
+        case .update:
+            return Color(red: 0.0, green: 0.6, blue: 0.3).opacity(0.4)
         }
     }
     
@@ -42,6 +54,8 @@ enum ToastStyle {
             return "arrow.triangle.2.circlepath"
         case .error:
             return "exclamationmark.triangle.fill"
+        case .update:
+            return "arrow.down.circle.fill"
         }
     }
 }
@@ -183,6 +197,116 @@ extension View {
     
     func errorToast(message: Binding<String?>, icon: String = "exclamationmark.triangle.fill") -> some View {
         modifier(ErrorToastModifier(message: message, icon: icon))
+    }
+
+    func updateToast(version: Binding<String?>) -> some View {
+        modifier(UpdateToastModifier(version: version))
+    }
+}
+
+// MARK: - Update Toast View
+
+private struct UpdateToastView: View {
+    let version: String
+    let onDismiss: () -> Void
+
+    private let brewCommand = "brew upgrade bilal-fazlani/tap/aws-ssm-param-store-ui"
+
+    var body: some View {
+        HStack(spacing: 14) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.2))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+
+            // Text content
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Version \(version) is available")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white)
+                Text(brewCommand)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            // Copy brew command button
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(brewCommand, forType: .string)
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.2))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            .help("Copy brew upgrade command")
+
+            // Dismiss button
+            Button {
+                onDismiss()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.2))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            .help("Dismiss")
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(ToastStyle.update.gradient)
+                .shadow(color: ToastStyle.update.shadowColor, radius: 20, x: 0, y: 8)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(.white.opacity(0.2), lineWidth: 1)
+        }
+    }
+}
+
+// MARK: - Update Toast Modifier
+
+struct UpdateToastModifier: ViewModifier {
+    @Binding var version: String?
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let version = version {
+                    UpdateToastView(version: version) {
+                        self.version = nil
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.95, anchor: .bottom)),
+                        removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .bottom))
+                    ))
+                    .zIndex(98) // Below info and error toasts
+                }
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.75), value: version)
     }
 }
 
