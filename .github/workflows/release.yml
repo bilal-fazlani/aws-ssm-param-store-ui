@@ -41,7 +41,9 @@ jobs:
             -archivePath "$RUNNER_TEMP/AWSSSMParamStoreUI.xcarchive" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application: Bilal Fazlani (6P85FFF835)" \
-            DEVELOPMENT_TEAM=6P85FFF835
+            DEVELOPMENT_TEAM=6P85FFF835 \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$VERSION"
 
       - name: Export .app
         run: |
