@@ -1,4 +1,17 @@
 import SwiftUI
+import AppKit
+
+// MARK: - Window Accessor
+
+private struct WindowAccessor: NSViewRepresentable {
+    let onWindow: (NSWindow?) -> Void
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        DispatchQueue.main.async { self.onWindow(v.window) }
+        return v
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
 
 // MARK: - Connection Picker Overlay
 
@@ -8,6 +21,7 @@ struct ConnectionPickerOverlay: View {
     var onManage: () -> Void
 
     @State private var selectedIndex = 0
+    @State private var ownWindow: NSWindow?
     @FocusState private var isFocused: Bool
 
     private var connections: [Connection] {
@@ -119,8 +133,14 @@ struct ConnectionPickerOverlay: View {
             .padding(.horizontal, 48)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WindowAccessor { ownWindow = $0 })
         .onAppear {
             selectedIndex = 0
+            DispatchQueue.main.async { isFocused = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { notification in
+            guard let notifiedWindow = notification.object as? NSWindow,
+                  let ownWindow, notifiedWindow === ownWindow else { return }
             DispatchQueue.main.async { isFocused = true }
         }
     }
