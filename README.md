@@ -28,41 +28,6 @@ The app supports dark and light mode depending on the system appearance
 
 View nested folders and parameters
 
-![Dark and light mode support](readme-imgs/dark-light-mode-support.png)
-
-### Manage connections
-The app supports managing connections to AWS Parameter Store
-
-Support for SSO Profile, Credentials and LocalStack
-
-![Manage connections](readme-imgs/manage-connections.png)
-
-### Built for keyboard users
-The app supports keyboard shortcuts for common actions
-
-![Keyboard shortcuts](readme-imgs/shortcuts.png)
-
-### Find parameter
-The app supports finding parameters by name or path
-
-The find interface is very fast and allows searching in the path and values of the parameters
-
-![Find parameters](readme-imgs/find-configs.png)
-
-### Multi region support
-The app supports easy switching between regions while maintaining current navigation context where possible
-
-![Multi region support](readme-imgs/switch-regions.png)
-
-### Add parameter
-Easy to add new parameters with `⌘` + `⇧` + `N`
-
-Secure string values are supported
-
-Supports adding parameters to any level of the hierarchy
-
-![Add parameter](readme-imgs/add-new-param.png)
-
 ### Delete / parameter
 use the context menu to 
 
@@ -72,3 +37,37 @@ use the context menu to
 - copy string and secure string values
 
 ![Delete parameter](readme-imgs/delete-copy-param.png)
+
+### Manage connections
+The app supports managing connections to AWS Parameter Store
+
+Support for SSO Profile, Credentials and LocalStack
+
+![Manage connections](readme-imgs/manage-connections.png)
+
+
+### Find parameter
+The app supports finding parameters by name or path
+
+The find interface is very fast and allows searching in the path and values of the parameters
+
+![Find parameters](readme-imgs/find-configs.png)
+
+### Built for keyboard users
+The app supports keyboard shortcuts for common actions
+
+### Multi region support
+The app supports easy switching between regions while maintaining current navigation context where possible
+
+![Multi region support](readme-imgs/region-shortcuts.png)
+
+### Add parameter
+Easy to add new parameters with `⌘` + `⇧` + `N`
+
+Secure string values are supported
+
+Supports adding parameters to any level of the hierarchy
+
+![Add parameter](readme-imgs/nested-add-secrets.png)
+
+
