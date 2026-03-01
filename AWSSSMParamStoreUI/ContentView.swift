@@ -163,6 +163,21 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.15), value: showingSearch)
+        .overlay {
+            if showingAddSheet {
+                AddParameterOverlay(
+                    isPresented: $showingAddSheet,
+                    pathPrefix: newValuePathPrefix,
+                    onAdd: { name, value, type, description in
+                        Task {
+                            await appState.addParameter(path: newValuePathPrefix + name, value: value, type: type, description: description)
+                        }
+                    }
+                )
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: showingAddSheet)
         .navigationTitle(windowTitle)
         .navigationSubtitle(lastUpdatedText)
         .toast(message: $appState.toastMessage, icon: "arrow.triangle.2.circlepath")
@@ -332,16 +347,6 @@ struct ContentView: View {
                 .help("Refresh (⌘R)")
                 .disabled(appState.currentConnection == nil)
             }
-        }
-        .sheet(isPresented: $showingAddSheet) {
-            AddParameterSheet(
-                pathPrefix: newValuePathPrefix,
-                onAdd: { name, value, type, description in
-                    Task {
-                        await appState.addParameter(path: newValuePathPrefix + name, value: value, type: type, description: description)
-                    }
-                }
-            )
         }
         .sheet(isPresented: $showingSettings) {
             ConnectionPickerSheet(
@@ -613,14 +618,15 @@ struct ShortcutsPopover: View {
 
 enum ParameterType: String, CaseIterable {
     case string = "String"
+    case stringList = "StringList"
     case secureString = "SecureString"
 }
 
-struct AddParameterSheet: View {
+struct AddParameterOverlay: View {
+    @Binding var isPresented: Bool
     let pathPrefix: String
     let onAdd: (String, String, ParameterType, String?) -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var parameterName: String = ""
     @State private var parameterValue: String = ""
     @State private var parameterType: ParameterType = .string
@@ -632,72 +638,171 @@ struct AddParameterSheet: View {
         !parameterValue.isEmpty
     }
 
-    var body: some View {
-        NavigationStack {
-            Form {
-                // Path: prefix on its own line ending with /, name field below it.
-                // Both left-aligned in monospaced so they read as one continuous path.
-                Section("Path") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(pathPrefix)
-                            .foregroundStyle(.secondary)
-                            .font(.system(.body, design: .monospaced))
-                            .lineLimit(1)
-                            .truncationMode(.head)
-                        TextField("", text: $parameterName)
-                            .font(.system(.body, design: .monospaced))
-                            .focused($isNameFocused)
-                    }
-                    .padding(.vertical, 2)
-                }
+    private func dismiss() {
+        parameterName = ""
+        parameterValue = ""
+        parameterType = .string
+        parameterDescription = ""
+        isPresented = false
+    }
 
-                // Type: LabeledContent works fine here — segmented picker is a
-                // compact single-row control that fits naturally in the right column.
-                Section {
-                    LabeledContent("Type") {
-                        Picker("Type", selection: $parameterType) {
-                            ForEach(ParameterType.allCases, id: \.self) { type in
-                                Text(type.rawValue).tag(type)
+    private func submit() {
+        guard isValid else { return }
+        onAdd(parameterName, parameterValue, parameterType, parameterDescription.isEmpty ? nil : parameterDescription)
+        dismiss()
+    }
+
+    var body: some View {
+        ZStack {
+            // Glass scrim — fills the whole window
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea()
+                .overlay(Color.black.opacity(0.25).ignoresSafeArea())
+
+            VStack(spacing: 0) {
+                // ── Title ────────────────────────────────────────────────────
+                HStack {
+                    Text("New Parameter")
+                        .font(.title2.weight(.semibold))
+                    Spacer()
+                }
+                .padding(.horizontal, 48)
+                .padding(.top, 60)
+                .padding(.bottom, 4)
+
+                // ── Fields area — scrollable, floats on glass ────────────────
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        // Path
+                        fieldGroup(label: "Path") {
+                            HStack(spacing: 0) {
+                                Text(pathPrefix)
+                                    .foregroundStyle(.primary)
+                                    .font(.system(.body, design: .monospaced))
+                                    .lineLimit(1)
+                                    .truncationMode(.head)
+                                TextField("…enter path", text: $parameterName)
+                                    .font(.system(.body, design: .monospaced))
+                                    .textFieldStyle(.plain)
+                                    .focused($isNameFocused)
+                                    .onSubmit { submit() }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(.separator, lineWidth: 0.5)
+                            )
+                        }
+
+                        // Type picker
+                        fieldGroup(label: "Type") {
+                            Picker("Type", selection: $parameterType) {
+                                ForEach(ParameterType.allCases, id: \.self) { type in
+                                    Text(type.rawValue).tag(type)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                        }
+
+                        // Description
+                        fieldGroup(label: "Description (optional)") {
+                            TextField("", text: $parameterDescription)
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .strokeBorder(.separator, lineWidth: 0.5)
+                                )
+                        }
+
+                        // Value / Items
+                        fieldGroup(label: parameterType == .stringList ? "Items" : "Value") {
+                            if parameterType == .stringList {
+                                StringListEditor(commaSeparatedValue: $parameterValue)
+                            } else {
+                                TextEditor(text: $parameterValue)
+                                    .font(.system(.body, design: .monospaced))
+                                    .scrollContentBackground(.hidden)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .frame(minHeight: 160)
+                                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(.separator, lineWidth: 0.5)
+                                    )
                             }
                         }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-                        .frame(maxWidth: 240)
                     }
+                    .padding(.horizontal, 48)
+                    .padding(.vertical, 28)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                Section("Description") {
-                    TextField("Optional", text: $parameterDescription)
-                }
-
-                // Value: section header as label so the TextEditor spans the full
-                // row width and anchors top-left instead of being pushed right.
-                Section("Value") {
-                    TextEditor(text: $parameterValue)
-                        .font(.system(.body, design: .monospaced))
-                        .scrollContentBackground(.hidden)
-                        .frame(minHeight: 100)
-                }
-            }
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .navigationTitle("New Parameter")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                // ── Bottom bar ───────────────────────────────────────────────
+                HStack(spacing: 16) {
+                    keyHint("esc", label: "dismiss")
+                    Spacer()
                     Button("Cancel") { dismiss() }
+                        .keyboardShortcut(.escape, modifiers: [])
+                    Button("Add Parameter") { submit() }
+                        .keyboardShortcut(.return, modifiers: [.command])
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!isValid)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add Parameter") {
-                        onAdd(parameterName, parameterValue, parameterType, parameterDescription.isEmpty ? nil : parameterDescription)
-                        dismiss()
-                    }
-                    .keyboardShortcut(.return)
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!isValid)
+                .padding(.horizontal, 48)
+                .padding(.bottom, 24)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            DispatchQueue.main.async { isNameFocused = true }
+        }
+        .onChange(of: parameterType) { _, newType in
+            if newType == .stringList {
+                let transformed = parameterValue
+                    .components(separatedBy: ",")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: ",")
+                if transformed != parameterValue {
+                    parameterValue = transformed
                 }
             }
         }
-        .frame(minWidth: 460)
-        .onAppear { isNameFocused = true }
+    }
+
+    @ViewBuilder
+    private func fieldGroup<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    @ViewBuilder
+    private func keyHint(_ key: String, label: String) -> some View {
+        HStack(spacing: 5) {
+            Text(key)
+                .font(.system(.caption, design: .monospaced))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: 4))
+                .foregroundStyle(.secondary)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
     }
 }

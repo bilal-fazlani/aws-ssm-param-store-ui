@@ -164,7 +164,7 @@ class AppState: ObservableObject {
                     name: node.fullPath,
                     value: newValue,
                     description: newDescription,
-                    isSecure: newType.map { $0 == .secureString }
+                    type: newType
                 )
 
                 updateNode(id: nodeId, in: &rootNodes) { n in
@@ -318,7 +318,7 @@ class AppState: ObservableObject {
         insertNode(optimisticNode, into: &rootNodes)
 
         do {
-            let createdDate = try await service.createParameter(name: path, value: value, isSecure: type == .secureString, description: description)
+            let createdDate = try await service.createParameter(name: path, value: value, type: type, description: description)
             updateNode(id: path, in: &rootNodes) { n in
                 n.isPending = false
                 n.lastModified = createdDate

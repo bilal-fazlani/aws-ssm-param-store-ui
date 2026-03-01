@@ -360,12 +360,16 @@ struct SearchResultRow: View {
 
     private var iconColor: Color {
         if result.isFolder { return .blue }
-        return result.node.type == "SecureString" ? .red : .gray
+        if result.node.type == "SecureString" { return .red }
+        if result.node.type == "StringList" { return .purple }
+        return .gray
     }
 
     private var iconName: String {
         if result.isFolder { return "folder.fill" }
-        return result.node.type == "SecureString" ? "lock.fill" : "doc.text.fill"
+        if result.node.type == "SecureString" { return "lock.fill" }
+        if result.node.type == "StringList" { return "list.bullet" }
+        return "doc.text.fill"
     }
 
     var body: some View {

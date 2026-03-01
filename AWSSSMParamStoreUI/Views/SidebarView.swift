@@ -191,12 +191,22 @@ struct ParameterRow: View {
     
     // Functional color logic:
     // - SecureString = red (sensitive)
+    // - StringList = purple
     // - Normal = gray
     private var iconColor: Color {
         if node.type == "SecureString" {
             return .red
         }
+        if node.type == "StringList" {
+            return .purple
+        }
         return .gray
+    }
+    
+    private var iconName: String {
+        if node.type == "SecureString" { return "lock.fill" }
+        if node.type == "StringList" { return "list.bullet" }
+        return "doc.text.fill"
     }
     
     private var isSecure: Bool {
@@ -210,7 +220,7 @@ struct ParameterRow: View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(iconColor.gradient)
                     .frame(width: 24, height: 24)
-                Image(systemName: isSecure ? "lock.fill" : "doc.text.fill")
+                Image(systemName: iconName)
                     .foregroundStyle(.white)
                     .font(.system(size: 11, weight: .medium))
             }

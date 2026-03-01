@@ -19,7 +19,11 @@ struct DetailView: View {
     }
 
     private var nodeType: ParameterType {
-        node.type == "SecureString" ? .secureString : .string
+        switch node.type {
+        case "SecureString": return .secureString
+        case "StringList": return .stringList
+        default: return .string
+        }
     }
 
     private var hasChanges: Bool {
@@ -97,8 +101,9 @@ struct DetailView: View {
                             }
                         }
                         Picker("Type", selection: $editedType) {
-                            Text("SecureString").tag(ParameterType.secureString)
-                            Text("String").tag(ParameterType.string)
+                            ForEach(ParameterType.allCases, id: \.self) { type in
+                                Text(type.rawValue).tag(type)
+                            }
                         }
                         .pickerStyle(.segmented)
                         .labelsHidden()
@@ -111,7 +116,7 @@ struct DetailView: View {
                     // Value section
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 4) {
-                            Text("Value")
+                            Text(editedType == .stringList ? "Items" : "Value")
                                 .font(.subheadline.weight(.medium))
                                 .foregroundStyle(.secondary)
                             if isValueDirty {
@@ -149,6 +154,13 @@ struct DetailView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(24)
                                 }
+                            } else if editedType == .stringList {
+                                StringListEditor(commaSeparatedValue: $editedValue)
+                                    .padding(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(isValueDirty ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
+                                    )
                             } else {
                                 TextEditor(text: $editedValue)
                                     .font(.system(.body, design: .monospaced))
@@ -306,7 +318,18 @@ struct DetailView: View {
                     isValueRevealed = true
                 }
             }
-            // String → SecureString: hide value before save to preview post-save state
+            // String/SecureString → StringList: split on comma, trim, discard empty, re-join
+            if newType == .stringList {
+                let transformed = editedValue
+                    .components(separatedBy: ",")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: ",")
+                if transformed != editedValue {
+                    editedValue = transformed
+                }
+            }
+            // String/StringList → SecureString: hide value before save to preview post-save state
             if newType == .secureString {
                 withAnimation(.easeInOut(duration: 0.15)) {
                     isValueRevealed = false
@@ -711,6 +734,13 @@ struct ChildRow: View {
         guard node.isLeaf, let value = node.value, !value.isEmpty else { return nil }
         // Don't show preview for secure strings
         if node.type == "SecureString" { return nil }
+        if node.type == "StringList" {
+            let items = value.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            let count = items.count
+            if count == 0 { return nil }
+            let preview = items.prefix(3).joined(separator: ", ")
+            return count <= 3 ? preview : "\(count) items: \(preview)"
+        }
         let firstLine = value.components(separatedBy: .newlines).first ?? value
         if firstLine.count > 60 {
             return String(firstLine.prefix(60)) + "..."
@@ -721,6 +751,7 @@ struct ChildRow: View {
     // Functional color logic:
     // - Folders = blue
     // - SecureString = red
+    // - StringList = purple
     // - Normal = gray
     private var iconColor: Color {
         if !node.isLeaf {
@@ -729,7 +760,17 @@ struct ChildRow: View {
         if node.type == "SecureString" {
             return .red
         }
+        if node.type == "StringList" {
+            return .purple
+        }
         return .gray
+    }
+    
+    private var iconName: String {
+        if !node.isLeaf { return "folder.fill" }
+        if node.type == "SecureString" { return "lock.fill" }
+        if node.type == "StringList" { return "list.bullet" }
+        return "doc.text.fill"
     }
     
     private var isSecure: Bool {
@@ -743,7 +784,7 @@ struct ChildRow: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(iconColor.gradient)
                     .frame(width: 32, height: 32)
-                Image(systemName: node.isLeaf ? (isSecure ? "lock.fill" : "doc.text.fill") : "folder.fill")
+                Image(systemName: iconName)
                     .foregroundStyle(.white)
                     .font(.system(size: 14, weight: .medium))
             }

@@ -171,14 +171,14 @@ actor SSMService {
         return parameters
     }
 
-    func updateParameter(name: String, value: String, description: String? = nil, isSecure: Bool? = nil) async throws -> Date {
+    func updateParameter(name: String, value: String, description: String? = nil, type: ParameterType? = nil) async throws -> Date {
         guard let client = client else { throw ServiceError.notConfigured }
 
         let input = PutParameterInput(
             description: description,
             name: name,
             overwrite: true,
-            type: isSecure.map { $0 ? .secureString : .string },
+            type: type.map { ssmType(from: $0) },
             value: value
         )
 
@@ -186,18 +186,26 @@ actor SSMService {
         return Date() // Return current time as approx update time
     }
     
-    func createParameter(name: String, value: String, isSecure: Bool = false, description: String? = nil) async throws -> Date {
+    func createParameter(name: String, value: String, type: ParameterType = .string, description: String? = nil) async throws -> Date {
         guard let client = client else { throw ServiceError.notConfigured }
         
         let input = PutParameterInput(
             description: description,
             name: name,
-            type: isSecure ? .secureString : .string,
+            type: ssmType(from: type),
             value: value
         )
         
         _ = try await client.putParameter(input: input)
         return Date()
+    }
+    
+    private func ssmType(from type: ParameterType) -> SSMClientTypes.ParameterType {
+        switch type {
+        case .string: return .string
+        case .stringList: return .stringList
+        case .secureString: return .secureString
+        }
     }
     
     func deleteParameter(name: String) async throws {
