@@ -292,9 +292,9 @@ struct ContentView: View {
         .sheet(isPresented: $showingAddSheet) {
             AddParameterSheet(
                 pathPrefix: newValuePathPrefix,
-                onAdd: { name, value, type in
+                onAdd: { name, value, type, description in
                     Task {
-                        await appState.addParameter(path: newValuePathPrefix + name, value: value, type: type)
+                        await appState.addParameter(path: newValuePathPrefix + name, value: value, type: type, description: description)
                     }
                 }
             )
@@ -574,12 +574,13 @@ enum ParameterType: String, CaseIterable {
 
 struct AddParameterSheet: View {
     let pathPrefix: String
-    let onAdd: (String, String, ParameterType) -> Void
+    let onAdd: (String, String, ParameterType, String?) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var parameterName: String = ""
     @State private var parameterValue: String = ""
     @State private var parameterType: ParameterType = .string
+    @State private var parameterDescription: String = ""
     @FocusState private var isNameFocused: Bool
 
     private var isValid: Bool {
@@ -620,6 +621,10 @@ struct AddParameterSheet: View {
                     }
                 }
 
+                Section("Description") {
+                    TextField("Optional", text: $parameterDescription)
+                }
+
                 // Value: section header as label so the TextEditor spans the full
                 // row width and anchors top-left instead of being pushed right.
                 Section("Value") {
@@ -638,7 +643,7 @@ struct AddParameterSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add Parameter") {
-                        onAdd(parameterName, parameterValue, parameterType)
+                        onAdd(parameterName, parameterValue, parameterType, parameterDescription.isEmpty ? nil : parameterDescription)
                         dismiss()
                     }
                     .keyboardShortcut(.return)

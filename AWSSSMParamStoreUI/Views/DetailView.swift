@@ -7,6 +7,7 @@ struct DetailView: View {
     var onNavigateToSidebar: () -> Void = {}
     @EnvironmentObject var appState: AppState
     @State private var editedValue: String = ""
+    @State private var editedDescription: String = ""
     @State private var isSaving: Bool = false
     @State private var showDeleteConfirmation: Bool = false
     @State private var isValueRevealed: Bool = false
@@ -17,7 +18,7 @@ struct DetailView: View {
     }
 
     private var hasChanges: Bool {
-        editedValue != node.serverValue
+        editedValue != node.serverValue || editedDescription != (node.description ?? "")
     }
     
     // Get parent path from current node's path
@@ -33,58 +34,74 @@ struct DetailView: View {
         VStack(spacing: 0) {
             // Breadcrumb navigation
             BreadcrumbView(path: node.fullPath, selection: $selection)
-            
-            // Text editor — or loading state while Phase 2 value fetch is in flight
+
+            // Description + value inside one rounded container (Option C)
             if node.isValueLoaded {
                 if isSecureString && !isValueRevealed {
                     // Masked overlay for hidden SecureString values
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(.regularMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                            )
-
-                        VStack(spacing: 12) {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 28, weight: .medium))
-                                .foregroundStyle(.red)
-                            Text("Value hidden")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.secondary)
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.15)) {
-                                    isValueRevealed = true
+                    VStack(alignment: .leading, spacing: 0) {
+                        TextField("Add a description…", text: $editedDescription)
+                            .textFieldStyle(.plain)
+                            .font(.system(.body))
+                            .padding()
+                        Divider()
+                            .padding(.horizontal)
+                        ZStack {
+                            Color.clear
+                            VStack(spacing: 12) {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 28, weight: .medium))
+                                    .foregroundStyle(.red)
+                                Text("Value hidden")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.secondary)
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.15)) {
+                                        isValueRevealed = true
+                                    }
+                                } label: {
+                                    Label("Reveal Value", systemImage: "eye")
                                 }
-                            } label: {
-                                Label("Reveal Value", systemImage: "eye")
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
+                        .padding()
                     }
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
                     .padding()
                 } else {
-                    TextEditor(text: $editedValue)
-                        .font(.system(.body, design: .monospaced))
-                        .scrollContentBackground(.hidden)
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(hasChanges ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
-                        )
-                        .padding()
-                        .focused($isEditorFocused)
-                        .onKeyPress(.leftArrow) {
-                            // At cursor position 0 with no selection → return focus to sidebar
-                            guard let tv = NSApp.keyWindow?.firstResponder as? NSTextView,
-                                  tv.selectedRange.location == 0,
-                                  tv.selectedRange.length == 0 else { return .ignored }
-                            onNavigateToSidebar()
-                            return .handled
-                        }
+                    VStack(alignment: .leading, spacing: 0) {
+                        TextField("Add a description…", text: $editedDescription)
+                            .textFieldStyle(.plain)
+                            .font(.system(.body))
+                            .padding()
+                        Divider()
+                            .padding(.horizontal)
+                        TextEditor(text: $editedValue)
+                            .font(.system(.body, design: .monospaced))
+                            .scrollContentBackground(.hidden)
+                            .padding()
+                            .focused($isEditorFocused)
+                            .onKeyPress(.leftArrow) {
+                                guard let tv = NSApp.keyWindow?.firstResponder as? NSTextView,
+                                      tv.selectedRange.location == 0,
+                                      tv.selectedRange.length == 0 else { return .ignored }
+                                onNavigateToSidebar()
+                                return .handled
+                            }
+                    }
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(hasChanges ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+                    .padding()
                 }
             } else {
                 VStack(spacing: 12) {
@@ -113,6 +130,7 @@ struct DetailView: View {
                 Button {
                     withAnimation(.spring(response: 0.3)) {
                         editedValue = node.serverValue ?? ""
+                        editedDescription = node.description ?? ""
                     }
                 } label: {
                     Label("Revert", systemImage: "arrow.counterclockwise")
@@ -166,7 +184,11 @@ struct DetailView: View {
                 Button {
                     Task {
                         isSaving = true
-                        await appState.save(nodeId: node.id, newValue: editedValue)
+                        await appState.save(
+                            nodeId: node.id,
+                            newValue: editedValue,
+                            newDescription: editedDescription.isEmpty ? nil : editedDescription
+                        )
                         isSaving = false
                     }
                 } label: {
@@ -186,6 +208,7 @@ struct DetailView: View {
         }
         .onAppear {
             editedValue = node.value ?? ""
+            editedDescription = node.description ?? ""
             isValueRevealed = false
             // focusRequest may already be true if selection + focus were set in the same
             // state batch — onChange won't fire on a newly-created view, so check here too
@@ -196,6 +219,7 @@ struct DetailView: View {
         }
         .onChange(of: node.id) { _, _ in
             isValueRevealed = false
+            editedDescription = node.description ?? ""
         }
         .onChange(of: focusRequest) { _, requested in
             guard requested else { return }
@@ -236,6 +260,7 @@ struct DetailView: View {
             Button("") {
                 if hasChanges {
                     editedValue = node.serverValue ?? ""
+                    editedDescription = node.description ?? ""
                     appState.updateLocalValue(id: node.id, value: editedValue)
                 }
                 selection = parentPath
@@ -514,7 +539,7 @@ struct SectionHeader: View {
 struct BreadcrumbView: View {
     let path: String  // e.g., "/config/fraud-service/my-flag"
     @Binding var selection: String?
-    
+
     private var segments: [(name: String, path: String)] {
         var result: [(name: String, path: String)] = []
         let components = path.split(separator: "/").map(String.init)
@@ -540,14 +565,14 @@ struct BreadcrumbView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                
+
                 // Path segments
                 ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
                     // Chevron separator
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
-                    
+
                     // Segment button
                     if index == segments.count - 1 {
                         // Current segment (not clickable, highlighted)
@@ -591,7 +616,7 @@ struct ChildRow: View {
     private var valuePreview: String? {
         guard node.isLeaf, let value = node.value, !value.isEmpty else { return nil }
         // Don't show preview for secure strings
-        if node.type == "SecureString" { return "••••••••" }
+        if node.type == "SecureString" { return nil }
         let firstLine = value.components(separatedBy: .newlines).first ?? value
         if firstLine.count > 60 {
             return String(firstLine.prefix(60)) + "..."
@@ -629,7 +654,7 @@ struct ChildRow: View {
                     .font(.system(size: 14, weight: .medium))
             }
             
-            // Name and value preview
+            // Name, description, and value preview
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(node.name)
@@ -643,12 +668,20 @@ struct ChildRow: View {
                     }
                 }
                 
-                // Value preview for leaf nodes
+                // Description — single line with tail truncation, regular font
+                if let desc = node.description, !desc.isEmpty {
+                    Text(desc)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+
+                // Value preview — monospaced, dimmer when description also shown
                 if let preview = valuePreview {
                     Text(preview)
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .foregroundStyle(node.description != nil ? .tertiary : .secondary)
                 }
             }
             
@@ -687,6 +720,7 @@ struct ChildRow: View {
         .onHover { hovering in
             isHovered = hovering
         }
+        .help(node.description ?? "")
         .contextMenu {
             if node.isLeaf {
                 Button("Copy Value", systemImage: "doc.on.doc") {

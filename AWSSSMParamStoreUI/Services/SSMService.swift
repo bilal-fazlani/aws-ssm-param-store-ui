@@ -171,10 +171,11 @@ actor SSMService {
         return parameters
     }
 
-    func updateParameter(name: String, value: String) async throws -> Date {
+    func updateParameter(name: String, value: String, description: String? = nil) async throws -> Date {
         guard let client = client else { throw ServiceError.notConfigured }
         
         let input = PutParameterInput(
+            description: description,
             name: name,
             overwrite: true,
             value: value
@@ -184,10 +185,11 @@ actor SSMService {
         return Date() // Return current time as approx update time
     }
     
-    func createParameter(name: String, value: String, isSecure: Bool = false) async throws -> Date {
+    func createParameter(name: String, value: String, isSecure: Bool = false, description: String? = nil) async throws -> Date {
         guard let client = client else { throw ServiceError.notConfigured }
         
         let input = PutParameterInput(
+            description: description,
             name: name,
             type: isSecure ? .secureString : .string,
             value: value

@@ -157,24 +157,18 @@ class AppState: ObservableObject {
         isLoading = false
     }
     
-    func save(nodeId: String, newValue: String) async {
-        // Find node by ID first
-        // Since ConfigNode is a struct, we modify the tree in place
-        // But recursively finding and modifying a struct in an array is tricky.
-        // We will implement a helper to update the tree.
-        
+    func save(nodeId: String, newValue: String, newDescription: String? = nil) async {
         do {
-            // Optimistic update
             if let node = findNode(id: nodeId, nodes: rootNodes) {
-                 _ = try await service.updateParameter(name: node.fullPath, value: newValue)
-                 
-                 // Success - update tree
-                 updateNode(id: nodeId, in: &rootNodes) { n in
-                     n.serverValue = newValue
-                     n.value = newValue
-                     n.isDirty = false
-                     n.lastModified = Date()
-                 }
+                _ = try await service.updateParameter(name: node.fullPath, value: newValue, description: newDescription)
+
+                updateNode(id: nodeId, in: &rootNodes) { n in
+                    n.serverValue = newValue
+                    n.value = newValue
+                    n.isDirty = false
+                    n.lastModified = Date()
+                    n.description = newDescription
+                }
             }
         } catch {
             errorMessage = "Failed to save: \(error.localizedDescription)"
@@ -235,6 +229,7 @@ class AppState: ObservableObject {
                     var leafNode = ConfigNode(name: leafName, fullPath: fullPath, value: nil)
                     leafNode.type = meta.type?.rawValue
                     leafNode.lastModified = meta.lastModifiedDate
+                    leafNode.description = meta.description
                     leafNode.isValueLoaded = false
                     insertNode(leafNode, into: &rootNodes)
                 }
@@ -298,7 +293,7 @@ class AppState: ObservableObject {
     }
 
     // Add a new parameter (optimistic: inserts into tree immediately, rolls back on failure)
-    func addParameter(path: String, value: String, type: ParameterType = .string) async {
+    func addParameter(path: String, value: String, type: ParameterType = .string, description: String? = nil) async {
         var optimisticNode = ConfigNode(
             name: String(path.split(separator: "/").last ?? Substring(path)),
             fullPath: path,
@@ -306,13 +301,14 @@ class AppState: ObservableObject {
         )
         optimisticNode.serverValue = value
         optimisticNode.type = type.rawValue
+        optimisticNode.description = description
         optimisticNode.isPending = true
         optimisticNode.lastModified = Date()
 
         insertNode(optimisticNode, into: &rootNodes)
 
         do {
-            let createdDate = try await service.createParameter(name: path, value: value, isSecure: type == .secureString)
+            let createdDate = try await service.createParameter(name: path, value: value, isSecure: type == .secureString, description: description)
             updateNode(id: path, in: &rootNodes) { n in
                 n.isPending = false
                 n.lastModified = createdDate

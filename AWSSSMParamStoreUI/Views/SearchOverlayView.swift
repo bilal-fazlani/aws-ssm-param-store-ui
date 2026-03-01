@@ -6,18 +6,20 @@ enum SearchMatchKind {
     case exactName    // node.name == query (case-insensitive)
     case partialName  // node.name contains query
     case path         // fullPath contains query but name does not (leaves only)
+    case description  // description contains query (all leaf types including SecureString)
     case value        // value contains query (non-SecureString leaves only)
 }
 
 enum SearchDisplayCategory: Equatable {
-    case exact, name, inPath, value
+    case exact, name, inPath, description, value
 
     var label: String {
         switch self {
-        case .exact:  return "Exact Match"
-        case .name:   return "Name"
-        case .inPath: return "In Path"
-        case .value:  return "Value"
+        case .exact:        return "Exact Match"
+        case .name:         return "Name"
+        case .inPath:       return "In Path"
+        case .description:  return "Description"
+        case .value:        return "Value"
         }
     }
 }
@@ -28,21 +30,24 @@ struct SearchResult: Identifiable {
     let kind: SearchMatchKind
     let isFolder: Bool
     let valueExcerpt: String?
+    let descriptionExcerpt: String?
 
-    init(id: String, node: ConfigNode, kind: SearchMatchKind, isFolder: Bool = false, valueExcerpt: String? = nil) {
+    init(id: String, node: ConfigNode, kind: SearchMatchKind, isFolder: Bool = false, valueExcerpt: String? = nil, descriptionExcerpt: String? = nil) {
         self.id = id
         self.node = node
         self.kind = kind
         self.isFolder = isFolder
         self.valueExcerpt = valueExcerpt
+        self.descriptionExcerpt = descriptionExcerpt
     }
 
     var displayCategory: SearchDisplayCategory {
         switch kind {
-        case .exactName:  return .exact
-        case .partialName: return .name
-        case .path:        return .inPath
-        case .value:       return .value
+        case .exactName:    return .exact
+        case .partialName:  return .name
+        case .path:         return .inPath
+        case .description:  return .description
+        case .value:        return .value
         }
     }
 }
@@ -72,7 +77,9 @@ struct SearchOverlayView: View {
         var partialLeafMatches: [SearchResult] = []
         // Bucket 5: leaf path contains (name does NOT match), sorted by match depth
         var pathMatches: [SearchResult] = []
-        // Bucket 6: leaf value contains (non-SecureString)
+        // Bucket 6: description contains query (all leaf types, including SecureString)
+        var descriptionMatches: [SearchResult] = []
+        // Bucket 7: leaf value contains (non-SecureString)
         var valueMatches: [SearchResult] = []
 
         // Folders only participate in name buckets (exact + partial)
@@ -93,6 +100,9 @@ struct SearchOverlayView: View {
                 partialLeafMatches.append(SearchResult(id: node.id, node: node, kind: .partialName))
             } else if node.fullPath.lowercased().contains(q) {
                 pathMatches.append(SearchResult(id: node.id, node: node, kind: .path))
+            } else if let desc = node.description, desc.lowercased().contains(q) {
+                let excerpt = makeExcerpt(value: desc, query: q)
+                descriptionMatches.append(SearchResult(id: node.id, node: node, kind: .description, descriptionExcerpt: excerpt))
             } else if node.type != "SecureString",
                       let value = node.value,
                       value.lowercased().contains(q) {
@@ -111,11 +121,12 @@ struct SearchOverlayView: View {
             let db = pathMatchDepth(fullPath: b.node.fullPath, query: q)
             return da != db ? da < db : a.node.fullPath < b.node.fullPath
         }
+        descriptionMatches.sort { $0.node.fullPath < $1.node.fullPath }
         valueMatches.sort { $0.node.fullPath < $1.node.fullPath }
 
         return exactFolderMatches + exactLeafMatches
              + partialFolderMatches + partialLeafMatches
-             + pathMatches + valueMatches
+             + pathMatches + descriptionMatches + valueMatches
     }
 
     var body: some View {
@@ -218,7 +229,7 @@ struct SearchOverlayView: View {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 48, weight: .ultraLight))
                                 .foregroundStyle(.tertiary)
-                            Text("Search by name, path, or value")
+                            Text("Search by name, path, description, or value")
                                 .font(.title3)
                                 .foregroundStyle(.tertiary)
                         }
@@ -413,7 +424,16 @@ struct SearchResultRow: View {
                     }
                 }
 
-                // Value excerpt — only for value-match results
+                // Description excerpt — for description-match results (regular font)
+                if result.kind == .description, let excerpt = result.descriptionExcerpt {
+                    HStack(spacing: 0) {
+                        Spacer().frame(width: 34) // align under name
+                        highlighted(excerpt, query: query, font: .caption, color: .secondary)
+                            .lineLimit(2)
+                    }
+                }
+
+                // Value excerpt — only for value-match results (monospaced)
                 if result.kind == .value, let excerpt = result.valueExcerpt {
                     HStack(spacing: 0) {
                         Spacer().frame(width: 34) // align under name

@@ -11,6 +11,7 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
     var serverValue: String?
     var lastModified: Date?
     var type: String? // String, StringList, SecureString
+    var description: String?
     
     // Conflict / Edit state
     var isDirty: Bool = false
@@ -51,7 +52,7 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
         self.children = children
     }
     
-    static func buildTree(from parameters: [(path: String, value: String, type: String?, lastModified: Date?)]) -> [ConfigNode] {
+    static func buildTree(from parameters: [(path: String, value: String, type: String?, lastModified: Date?, description: String?)]) -> [ConfigNode] {
         var rootChildren: [ConfigNode] = []
         
         // Sort by path to ensure deterministic order
@@ -78,7 +79,7 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
         }
     }
     
-    private static func insert(components: [String], param: (path: String, value: String, type: String?, lastModified: Date?), nodes: inout [ConfigNode], currentPath: String) {
+    private static func insert(components: [String], param: (path: String, value: String, type: String?, lastModified: Date?, description: String?), nodes: inout [ConfigNode], currentPath: String) {
         guard let head = components.first else { return }
         let tail = Array(components.dropFirst())
         
@@ -91,6 +92,7 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
                 nodes[index].serverValue = param.value
                 nodes[index].type = param.type
                 nodes[index].lastModified = param.lastModified
+                nodes[index].description = param.description
             } else {
                 if nodes[index].children == nil { nodes[index].children = [] }
                 insert(components: tail, param: param, nodes: &nodes[index].children!, currentPath: nodePath)
@@ -101,6 +103,7 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
                 var newNode = ConfigNode(name: head, fullPath: nodePath, value: param.value)
                 newNode.type = param.type
                 newNode.lastModified = param.lastModified
+                newNode.description = param.description
                 nodes.append(newNode)
             } else {
                 // Create folder
@@ -116,6 +119,7 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
         if self.isLeaf && newNode.isLeaf {
             self.lastModified = newNode.lastModified
             self.type = newNode.type
+            self.description = newNode.description
 
             if newNode.isValueLoaded {
                 // Incoming node has a real value — accept it
