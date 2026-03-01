@@ -153,13 +153,6 @@ struct NodeTreeView: View {
                     .tag(node.id)
             } else {
                 DisclosureGroup(isExpanded: isExpanded) {
-                    // Hybrid node: the path is both an SSM parameter AND a namespace prefix.
-                    // Render the node's own value as the first child so it's visible and
-                    // selectable without having to navigate to the detail pane separately.
-                    if node.isValueNode {
-                        ParameterRow(node: node, onDelete: { showDeleteConfirmation = true })
-                            .tag(node.id)
-                    }
                     if let children = node.children {
                         ForEach(children) { child in
                             NodeTreeView(node: child, selection: $selection, expandedFolders: $expandedFolders)
@@ -287,6 +280,15 @@ struct FolderRow: View {
     let node: ConfigNode
     let onDelete: () -> Void
 
+    private var shortType: String {
+        switch node.type ?? "String" {
+        case "SecureString": return "Sec"
+        case "StringList": return "List"
+        case "String": return "Str"
+        default: return node.type ?? "Str"
+        }
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             // Blue folder icon for all folders
@@ -301,6 +303,15 @@ struct FolderRow: View {
 
             Text(node.name)
                 .fontWeight(.medium)
+
+            if node.isValueNode {
+                Text(shortType)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.secondary.opacity(0.1)))
+            }
 
             Spacer()
 

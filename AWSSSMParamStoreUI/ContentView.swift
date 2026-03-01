@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum HybridDetailMode {
+    case value
+    case contents
+}
+
 struct ContentView: View {
     @StateObject private var appState = AppState()
     @ObservedObject private var connectionStore = ConnectionStore.shared
@@ -12,7 +17,8 @@ struct ContentView: View {
     @State private var sidebarFocusRequest = false
     @State private var detailFocusRequest = false
     @State private var lastConnectWasFromSheet = false
-    
+    @State private var hybridDetailMode: HybridDetailMode = .value
+
     private var parentId: String? {
         guard let selection = selection else { return nil }
         return findParentId(for: selection, in: appState.rootNodes)
@@ -76,7 +82,7 @@ struct ContentView: View {
         } detail: {
             if let selection = selection,
                let node = findNode(id: selection, nodes: appState.rootNodes) {
-                if node.isLeaf || node.isValueNode {
+                if node.isLeaf {
                     DetailView(
                         node: node,
                         selection: $selection,
@@ -85,6 +91,36 @@ struct ContentView: View {
                     )
                     .environmentObject(appState)
                     .id(node.id)
+                } else if node.isValueNode {
+                    VStack(spacing: 0) {
+                        Picker("", selection: $hybridDetailMode) {
+                            Text("Value").tag(HybridDetailMode.value)
+                            Text("Contents").tag(HybridDetailMode.contents)
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(maxWidth: 200)
+                        .padding(.horizontal)
+                        .padding(.top, 10)
+
+                        Divider()
+                            .padding(.top, 8)
+
+                        if hybridDetailMode == .value {
+                            DetailView(
+                                node: node,
+                                selection: $selection,
+                                focusRequest: $detailFocusRequest,
+                                onNavigateToSidebar: { sidebarFocusRequest = true }
+                            )
+                            .environmentObject(appState)
+                            .id(node.id + "/value")
+                        } else {
+                            FolderSummaryView(node: node, selection: $selection)
+                                .environmentObject(appState)
+                                .id(node.id + "/contents")
+                        }
+                    }
                 } else {
                     FolderSummaryView(node: node, selection: $selection)
                         .environmentObject(appState)
@@ -133,6 +169,14 @@ struct ContentView: View {
         .errorToast(message: $appState.errorMessage)
         .updateToast(version: $appState.availableUpdateVersion)
         .onAppear { appState.checkForUpdates() }
+        .onChange(of: selection) { _, newSelection in
+            guard let id = newSelection,
+                  let node = findNode(id: id, nodes: appState.rootNodes),
+                  node.isValueNode, !node.isLeaf else {
+                hybridDetailMode = .value
+                return
+            }
+        }
         .toolbar {
             // Navigation: Home & Back buttons grouped
             ToolbarItemGroup(placement: .navigation) {
