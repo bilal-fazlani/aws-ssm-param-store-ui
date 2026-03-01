@@ -311,6 +311,10 @@ class AppState: ObservableObject {
         optimisticNode.isPending = true
         optimisticNode.lastModified = Date()
 
+        // Track whether insertNode actually adds a new node. If the path already exists in
+        // the tree (e.g. user accidentally re-adds an existing parameter), insertNode is a
+        // no-op and the rollback must not remove the pre-existing node.
+        let wasNewNode = findNode(id: path, nodes: rootNodes) == nil
         insertNode(optimisticNode, into: &rootNodes)
 
         do {
@@ -321,7 +325,9 @@ class AppState: ObservableObject {
             }
             showToast("Parameter added")
         } catch {
-            removeNode(path: path, from: &rootNodes)
+            if wasNewNode {
+                removeNode(path: path, from: &rootNodes)
+            }
             errorMessage = "Failed to add \"\(path.split(separator: "/").last.map(String.init) ?? path)\": \(error.localizedDescription)"
             print("Add parameter error: \(error)")
         }
@@ -424,7 +430,13 @@ class AppState: ObservableObject {
             }
             if nodes[i].children != nil {
                 if let removed = removeNode(path: path, from: &nodes[i].children!) {
-                    if nodes[i].children!.isEmpty { nodes.remove(at: i) }
+                    // Only prune synthetic path-prefix folders (no value of their own).
+                    // Never remove a node that is itself an SSM parameter, even if all children
+                    // have been deleted (e.g. /a/b alongside /a/b/c — deleting /a/b/c must not
+                    // remove /a/b).
+                    if nodes[i].children!.isEmpty && !nodes[i].isValueNode {
+                        nodes.remove(at: i)
+                    }
                     return removed
                 }
             }
@@ -475,3 +487,4 @@ class AppState: ObservableObject {
         return nil
     }
 }
+

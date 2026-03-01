@@ -76,7 +76,7 @@ struct ContentView: View {
         } detail: {
             if let selection = selection,
                let node = findNode(id: selection, nodes: appState.rootNodes) {
-                if node.isLeaf {
+                if node.isLeaf || node.isValueNode {
                     DetailView(
                         node: node,
                         selection: $selection,
@@ -584,7 +584,8 @@ struct AddParameterSheet: View {
     @FocusState private var isNameFocused: Bool
 
     private var isValid: Bool {
-        !parameterName.trimmingCharacters(in: .whitespaces).isEmpty
+        !parameterName.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !parameterValue.isEmpty
     }
 
     var body: some View {

@@ -27,6 +27,13 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
         children == nil
     }
 
+    /// True when this node corresponds to an actual SSM parameter (as opposed to a synthetic
+    /// path-prefix folder). A node can be both a value node AND have children when its path is
+    /// also a prefix of other parameters (e.g. `/a/b` exists alongside `/a/b/c`).
+    var isValueNode: Bool {
+        value != nil || serverValue != nil || isValueLoaded == false
+    }
+
     /// Total count of all descendants (folders + parameters) at any depth.
     var totalDescendantCount: Int {
         guard let children = children else { return 0 }
@@ -36,11 +43,13 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
     }
 
     /// Total count of leaf parameters at any depth (excludes intermediate folders).
+    /// Hybrid nodes (path is both a parameter and a namespace prefix) count as +1 for their own value.
     var totalLeafCount: Int {
         guard let children = children else { return 0 }
-        return children.reduce(0) { count, child in
+        let childCount = children.reduce(0) { count, child in
             child.isLeaf ? count + 1 : count + child.totalLeafCount
         }
+        return isValueNode ? childCount + 1 : childCount
     }
     
     init(name: String, fullPath: String, value: String? = nil, children: [ConfigNode]? = nil) {

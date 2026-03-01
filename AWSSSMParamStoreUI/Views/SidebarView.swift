@@ -153,6 +153,13 @@ struct NodeTreeView: View {
                     .tag(node.id)
             } else {
                 DisclosureGroup(isExpanded: isExpanded) {
+                    // Hybrid node: the path is both an SSM parameter AND a namespace prefix.
+                    // Render the node's own value as the first child so it's visible and
+                    // selectable without having to navigate to the detail pane separately.
+                    if node.isValueNode {
+                        ParameterRow(node: node, onDelete: { showDeleteConfirmation = true })
+                            .tag(node.id)
+                    }
                     if let children = node.children {
                         ForEach(children) { child in
                             NodeTreeView(node: child, selection: $selection, expandedFolders: $expandedFolders)
