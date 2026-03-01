@@ -8,6 +8,7 @@ struct DetailView: View {
     @EnvironmentObject var appState: AppState
     @State private var editedValue: String = ""
     @State private var editedDescription: String = ""
+    @State private var editedType: ParameterType = .string
     @State private var isSaving: Bool = false
     @State private var showDeleteConfirmation: Bool = false
     @State private var isValueRevealed: Bool = false
@@ -17,10 +18,28 @@ struct DetailView: View {
         node.type == "SecureString"
     }
 
-    private var hasChanges: Bool {
-        editedValue != node.serverValue || editedDescription != (node.description ?? "")
+    private var nodeType: ParameterType {
+        node.type == "SecureString" ? .secureString : .string
     }
-    
+
+    private var hasChanges: Bool {
+        editedValue != node.serverValue
+            || editedDescription != (node.description ?? "")
+            || editedType != nodeType
+    }
+
+    private var isDescriptionDirty: Bool {
+        editedDescription != (node.description ?? "")
+    }
+
+    private var isTypeDirty: Bool {
+        editedType != nodeType
+    }
+
+    private var isValueDirty: Bool {
+        editedValue != node.serverValue
+    }
+
     // Get parent path from current node's path
     private var parentPath: String? {
         let components = node.fullPath.split(separator: "/").dropLast()
@@ -35,84 +54,138 @@ struct DetailView: View {
             // Breadcrumb navigation
             BreadcrumbView(path: node.fullPath, selection: $selection)
 
-            // Description + value inside one rounded container (Option C)
-            if node.isValueLoaded {
-                if isSecureString && !isValueRevealed {
-                    // Masked overlay for hidden SecureString values
-                    VStack(alignment: .leading, spacing: 0) {
-                        TextField("Add a description…", text: $editedDescription)
-                            .textFieldStyle(.plain)
-                            .font(.system(.body))
-                            .padding()
-                        Divider()
-                            .padding(.horizontal)
-                        ZStack {
-                            Color.clear
-                            VStack(spacing: 12) {
-                                Image(systemName: "lock.fill")
-                                    .font(.system(size: 28, weight: .medium))
-                                    .foregroundStyle(.red)
-                                Text("Value hidden")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(.secondary)
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.15)) {
-                                        isValueRevealed = true
-                                    }
-                                } label: {
-                                    Label("Reveal Value", systemImage: "eye")
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
+            // Spacious layout: Description, Type, Value
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Description section
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 4) {
+                            Text("Description")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            if isDescriptionDirty {
+                                Circle()
+                                    .fill(.orange)
+                                    .frame(width: 8, height: 8)
                             }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
-                        .padding()
-                    }
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                    )
-                    .padding()
-                } else {
-                    VStack(alignment: .leading, spacing: 0) {
-                        TextField("Add a description…", text: $editedDescription)
+                        TextField("Add a description…", text: $editedDescription, axis: .vertical)
                             .textFieldStyle(.plain)
                             .font(.system(.body))
+                            .lineLimit(3...6)
                             .padding()
-                        Divider()
-                            .padding(.horizontal)
-                        TextEditor(text: $editedValue)
-                            .font(.system(.body, design: .monospaced))
-                            .scrollContentBackground(.hidden)
-                            .padding()
-                            .focused($isEditorFocused)
-                            .onKeyPress(.leftArrow) {
-                                guard let tv = NSApp.keyWindow?.firstResponder as? NSTextView,
-                                      tv.selectedRange.location == 0,
-                                      tv.selectedRange.length == 0 else { return .ignored }
-                                onNavigateToSidebar()
-                                return .handled
-                            }
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(
+                                        isDescriptionDirty ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1),
+                                        lineWidth: 1
+                                    )
+                            )
                     }
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(hasChanges ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
-                    )
-                    .padding()
+
+                    // Type section
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 4) {
+                            Text("Type")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            if isTypeDirty {
+                                Circle()
+                                    .fill(.orange)
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
+                        Picker("Type", selection: $editedType) {
+                            Text("SecureString").tag(ParameterType.secureString)
+                            Text("String").tag(ParameterType.string)
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7)
+                                .strokeBorder(isTypeDirty ? Color.orange.opacity(0.5) : Color.clear, lineWidth: 1)
+                        )
+                    }
+
+                    // Value section
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 4) {
+                            Text("Value")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            if isValueDirty {
+                                Circle()
+                                    .fill(.orange)
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
+                        if node.isValueLoaded {
+                            if editedType == .secureString && !isValueRevealed {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(.regularMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                                        )
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "lock.fill")
+                                            .font(.system(size: 28, weight: .medium))
+                                            .foregroundStyle(.red)
+                                        Text("Value hidden")
+                                            .font(.subheadline.weight(.medium))
+                                            .foregroundStyle(.secondary)
+                                        Button {
+                                            withAnimation(.easeInOut(duration: 0.15)) {
+                                                isValueRevealed = true
+                                            }
+                                        } label: {
+                                            Label("Reveal Value", systemImage: "eye")
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(24)
+                                }
+                            } else {
+                                TextEditor(text: $editedValue)
+                                    .font(.system(.body, design: .monospaced))
+                                    .scrollContentBackground(.hidden)
+                                    .padding()
+                                    .frame(minHeight: 120)
+                                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(isValueDirty ? Color.orange.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
+                                    )
+                                    .focused($isEditorFocused)
+                                    .onKeyPress(.leftArrow) {
+                                        guard let tv = NSApp.keyWindow?.firstResponder as? NSTextView,
+                                              tv.selectedRange.location == 0,
+                                              tv.selectedRange.length == 0 else { return .ignored }
+                                        onNavigateToSidebar()
+                                        return .handled
+                                    }
+                            }
+                        } else {
+                            VStack(spacing: 12) {
+                                ProgressView()
+                                    .controlSize(.large)
+                                Text("Loading value…")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(24)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                        }
+                    }
                 }
-            } else {
-                VStack(spacing: 12) {
-                    ProgressView()
-                        .controlSize(.large)
-                    Text("Loading value…")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // Bottom bar - always visible
             HStack {
@@ -131,14 +204,16 @@ struct DetailView: View {
                     withAnimation(.spring(response: 0.3)) {
                         editedValue = node.serverValue ?? ""
                         editedDescription = node.description ?? ""
+                        editedType = nodeType
+                        isValueRevealed = nodeType == .secureString ? false : isValueRevealed
                     }
                 } label: {
                     Label("Revert", systemImage: "arrow.counterclockwise")
                 }
                 .disabled(!hasChanges)
 
-                // Reveal / Hide toggle — only for SecureString
-                if isSecureString {
+                // Reveal / Hide toggle — only when edited type is SecureString
+                if editedType == .secureString {
                     Button {
                         withAnimation(.easeInOut(duration: 0.15)) {
                             isValueRevealed.toggle()
@@ -187,7 +262,8 @@ struct DetailView: View {
                         await appState.save(
                             nodeId: node.id,
                             newValue: editedValue,
-                            newDescription: editedDescription.isEmpty ? nil : editedDescription
+                            newDescription: editedDescription.isEmpty ? nil : editedDescription,
+                            newType: editedType
                         )
                         isSaving = false
                     }
@@ -209,6 +285,7 @@ struct DetailView: View {
         .onAppear {
             editedValue = node.value ?? ""
             editedDescription = node.description ?? ""
+            editedType = nodeType
             isValueRevealed = false
             // focusRequest may already be true if selection + focus were set in the same
             // state batch — onChange won't fire on a newly-created view, so check here too
@@ -220,6 +297,21 @@ struct DetailView: View {
         .onChange(of: node.id) { _, _ in
             isValueRevealed = false
             editedDescription = node.description ?? ""
+            editedType = nodeType
+        }
+        .onChange(of: editedType) { _, newType in
+            // SecureString → String: reveal value before save so user sees what they're exposing
+            if newType == .string && isSecureString {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    isValueRevealed = true
+                }
+            }
+            // String → SecureString: hide value before save to preview post-save state
+            if newType == .secureString {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    isValueRevealed = false
+                }
+            }
         }
         .onChange(of: focusRequest) { _, requested in
             guard requested else { return }
@@ -261,6 +353,8 @@ struct DetailView: View {
                 if hasChanges {
                     editedValue = node.serverValue ?? ""
                     editedDescription = node.description ?? ""
+                    editedType = nodeType
+                    isValueRevealed = nodeType == .secureString ? false : isValueRevealed
                     appState.updateLocalValue(id: node.id, value: editedValue)
                 }
                 selection = parentPath

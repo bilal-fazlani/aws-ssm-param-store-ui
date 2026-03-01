@@ -171,16 +171,17 @@ actor SSMService {
         return parameters
     }
 
-    func updateParameter(name: String, value: String, description: String? = nil) async throws -> Date {
+    func updateParameter(name: String, value: String, description: String? = nil, isSecure: Bool? = nil) async throws -> Date {
         guard let client = client else { throw ServiceError.notConfigured }
-        
+
         let input = PutParameterInput(
             description: description,
             name: name,
             overwrite: true,
+            type: isSecure.map { $0 ? .secureString : .string },
             value: value
         )
-        
+
         _ = try await client.putParameter(input: input)
         return Date() // Return current time as approx update time
     }

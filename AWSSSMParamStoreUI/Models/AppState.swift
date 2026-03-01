@@ -157,10 +157,15 @@ class AppState: ObservableObject {
         isLoading = false
     }
     
-    func save(nodeId: String, newValue: String, newDescription: String? = nil) async {
+    func save(nodeId: String, newValue: String, newDescription: String? = nil, newType: ParameterType? = nil) async {
         do {
             if let node = findNode(id: nodeId, nodes: rootNodes) {
-                _ = try await service.updateParameter(name: node.fullPath, value: newValue, description: newDescription)
+                _ = try await service.updateParameter(
+                    name: node.fullPath,
+                    value: newValue,
+                    description: newDescription,
+                    isSecure: newType.map { $0 == .secureString }
+                )
 
                 updateNode(id: nodeId, in: &rootNodes) { n in
                     n.serverValue = newValue
@@ -168,6 +173,7 @@ class AppState: ObservableObject {
                     n.isDirty = false
                     n.lastModified = Date()
                     n.description = newDescription
+                    if let newType { n.type = newType.rawValue }
                 }
             }
         } catch {
