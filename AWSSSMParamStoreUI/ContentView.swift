@@ -169,6 +169,11 @@ struct ContentView: View {
                 AddParameterOverlay(
                     isPresented: $showingAddSheet,
                     pathPrefix: newValuePathPrefix,
+                    pathExists: { path in
+                        let strippedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+                        return findNode(id: path, nodes: appState.rootNodes) != nil
+                            || findNode(id: strippedPath, nodes: appState.rootNodes) != nil
+                    },
                     onAdd: { name, value, type, description in
                         Task {
                             let path = newValuePathPrefix + name
@@ -666,12 +671,14 @@ enum ParameterType: String, CaseIterable {
 struct AddParameterOverlay: View {
     @Binding var isPresented: Bool
     let pathPrefix: String
+    let pathExists: (String) -> Bool
     let onAdd: (String, String, ParameterType, String?) -> Void
 
     @State private var parameterName: String = ""
     @State private var parameterValue: String = ""
     @State private var parameterType: ParameterType = .string
     @State private var parameterDescription: String = ""
+    @State private var showsDuplicateError = false
     @FocusState private var isNameFocused: Bool
 
     private var isValid: Bool {
@@ -684,11 +691,17 @@ struct AddParameterOverlay: View {
         parameterValue = ""
         parameterType = .string
         parameterDescription = ""
+        showsDuplicateError = false
         isPresented = false
     }
 
     private func submit() {
         guard isValid else { return }
+        let fullPath = pathPrefix + parameterName.trimmingCharacters(in: .whitespaces)
+        if pathExists(fullPath) {
+            withAnimation(.easeInOut(duration: 0.15)) { showsDuplicateError = true }
+            return
+        }
         onAdd(parameterName, parameterValue, parameterType, parameterDescription.isEmpty ? nil : parameterDescription)
         dismiss()
     }
@@ -734,8 +747,24 @@ struct AddParameterOverlay: View {
                             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .strokeBorder(.separator, lineWidth: 0.5)
+                                    .strokeBorder(
+                                        showsDuplicateError
+                                            ? AnyShapeStyle(Color.red.opacity(0.8))
+                                            : AnyShapeStyle(.separator),
+                                        lineWidth: showsDuplicateError ? 1.5 : 0.5
+                                    )
                             )
+
+                            if showsDuplicateError {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.caption)
+                                    Text("A parameter at this path already exists.")
+                                        .font(.caption)
+                                }
+                                .foregroundStyle(.red)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                         }
 
                         // Type picker
@@ -807,6 +836,9 @@ struct AddParameterOverlay: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             DispatchQueue.main.async { isNameFocused = true }
+        }
+        .onChange(of: parameterName) { _, _ in
+            withAnimation(.easeInOut(duration: 0.15)) { showsDuplicateError = false }
         }
         .onChange(of: parameterType) { _, newType in
             if newType == .stringList {
