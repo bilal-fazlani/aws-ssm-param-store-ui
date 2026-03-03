@@ -171,7 +171,12 @@ struct ContentView: View {
                     pathPrefix: newValuePathPrefix,
                     onAdd: { name, value, type, description in
                         Task {
-                            await appState.addParameter(path: newValuePathPrefix + name, value: value, type: type, description: description)
+                            let path = newValuePathPrefix + name
+                            let added = await appState.addParameter(path: path, value: value, type: type, description: description)
+                            if added {
+                                selection = path
+                                detailFocusRequest = true
+                            }
                         }
                     }
                 )

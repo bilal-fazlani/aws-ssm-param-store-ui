@@ -299,7 +299,8 @@ class AppState: ObservableObject {
     }
 
     // Add a new parameter (optimistic: inserts into tree immediately, rolls back on failure)
-    func addParameter(path: String, value: String, type: ParameterType = .string, description: String? = nil) async {
+    @discardableResult
+    func addParameter(path: String, value: String, type: ParameterType = .string, description: String? = nil) async -> Bool {
         var optimisticNode = ConfigNode(
             name: String(path.split(separator: "/").last ?? Substring(path)),
             fullPath: path,
@@ -324,12 +325,14 @@ class AppState: ObservableObject {
                 n.lastModified = createdDate
             }
             showToast("Parameter added")
+            return true
         } catch {
             if wasNewNode {
                 removeNode(path: path, from: &rootNodes)
             }
             errorMessage = "Failed to add \"\(path.split(separator: "/").last.map(String.init) ?? path)\": \(error.localizedDescription)"
             print("Add parameter error: \(error)")
+            return false
         }
     }
 
