@@ -141,7 +141,7 @@ struct NodeTreeView: View {
         if node.isLeaf {
             return "Are you sure you want to delete \"\(node.name)\"? This action cannot be undone."
         } else {
-            let count = node.totalDescendantCount
+            let count = node.totalLeafCount
             return "Are you sure you want to delete \"\(node.name)\" and all \(count) items inside? This action cannot be undone."
         }
     }

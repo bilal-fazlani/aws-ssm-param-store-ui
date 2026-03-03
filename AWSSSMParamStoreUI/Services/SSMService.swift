@@ -188,7 +188,6 @@ actor SSMService {
     
     func createParameter(name: String, value: String, type: ParameterType = .string, description: String? = nil) async throws -> Date {
         guard let client = client else { throw ServiceError.notConfigured }
-        
         let input = PutParameterInput(
             description: description,
             name: name,
@@ -210,7 +209,6 @@ actor SSMService {
     
     func deleteParameter(name: String) async throws {
         guard let client = client else { throw ServiceError.notConfigured }
-        
         let input = DeleteParameterInput(name: name)
         _ = try await client.deleteParameter(input: input)
     }

@@ -382,6 +382,10 @@ class AppState: ObservableObject {
         if node.isLeaf {
             paths.append(node.fullPath)
         } else {
+            // Hybrid node: also an SSM parameter in its own right — delete it too
+            if node.isValueNode {
+                paths.append(node.fullPath)
+            }
             for child in node.children ?? [] {
                 collectLeafPaths(child, into: &paths)
             }

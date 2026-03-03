@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showingSearch = false
     @State private var sidebarFocusRequest = false
     @State private var detailFocusRequest = false
+    @State private var showDeleteConfirmation = false
     @State private var lastConnectWasFromSheet = false
     @State private var hybridDetailMode: HybridDetailMode = .value
 
@@ -388,11 +389,12 @@ struct ContentView: View {
             .keyboardShortcut("1", modifiers: [.command])
             .opacity(0)
 
-            // Hidden button for CMD+, settings
+            // Hidden button for CMD+Delete to delete selected sidebar item
             Button("") {
-                showingSettings = true
+                guard selection != nil else { return }
+                showDeleteConfirmation = true
             }
-            .keyboardShortcut(",", modifiers: [.command])
+            .keyboardShortcut(.delete, modifiers: [.command])
             .opacity(0)
 
             // Hidden button for CMD+F search
@@ -416,6 +418,40 @@ struct ContentView: View {
                 // Show toast
                 appState.showToast("Switched to region: \(newRegion)")
             }
+        }
+        .alert(deleteAlertTitle, isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                guard let id = selection,
+                      let node = findNode(id: id, nodes: appState.rootNodes) else { return }
+                Task {
+                    selection = nil
+                    if node.isLeaf {
+                        await appState.deleteParameter(path: node.fullPath)
+                    } else {
+                        await appState.deleteFolder(node)
+                    }
+                }
+            }
+        } message: {
+            Text(deleteAlertMessage)
+        }
+    }
+
+    private var deleteAlertTitle: String {
+        guard let id = selection,
+              let node = findNode(id: id, nodes: appState.rootNodes) else { return "Delete" }
+        return node.isLeaf ? "Delete Parameter" : "Delete Folder"
+    }
+
+    private var deleteAlertMessage: String {
+        guard let id = selection,
+              let node = findNode(id: id, nodes: appState.rootNodes) else { return "" }
+        if node.isLeaf {
+            return "Are you sure you want to delete \"\(node.name)\"? This action cannot be undone."
+        } else {
+            let count = node.totalDescendantCount
+            return "Are you sure you want to delete \"\(node.name)\" and all \(count) items inside? This action cannot be undone."
         }
     }
     
@@ -576,7 +612,7 @@ struct ShortcutsPopover: View {
         ("⌘ F", "Search Parameters"),
         ("⌘ R", "Refresh"),
         ("⌘ S", "Save Changes"),
-        ("⌘ ,", "Settings"),
+        ("⌘ ⌫", "Delete Selected"),
     ]
     
     var body: some View {

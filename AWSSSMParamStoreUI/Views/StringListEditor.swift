@@ -24,7 +24,9 @@ struct StringListEditor: View {
     }
 
     private static func serialize(_ items: [ListItem]) -> String {
-        items.map(\.value).joined(separator: ",")
+        items.map { $0.value.trimmingCharacters(in: .whitespaces) }
+             .filter { !$0.isEmpty }
+             .joined(separator: ",")
     }
 
     private func syncFromBinding() {
