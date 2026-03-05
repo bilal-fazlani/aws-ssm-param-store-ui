@@ -194,7 +194,22 @@ struct ContentView: View {
         .toast(message: $appState.toastMessage, icon: "arrow.triangle.2.circlepath")
         .errorToast(message: $appState.errorMessage)
         .updateToast(version: $appState.availableUpdateVersion)
-        .onAppear { appState.checkForUpdates() }
+        .onAppear {
+            appState.checkForUpdates()
+            appState.checkWhatsNew()
+        }
+        .overlay {
+            if let content = appState.whatsNewContent {
+                WhatsNewOverlay(
+                    version: content.version,
+                    releaseNotes: content.body,
+                    onDismiss: { appState.dismissWhatsNew() }
+                )
+                .transition(.opacity)
+                .zIndex(200)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: appState.whatsNewContent == nil)
         .onChange(of: selection) { _, newSelection in
             guard let id = newSelection,
                   let node = findNode(id: id, nodes: appState.rootNodes),

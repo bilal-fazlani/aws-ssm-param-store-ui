@@ -1,9 +1,14 @@
 import Foundation
 
 struct UpdateCheckerService {
-    private let apiURL = URL(string: "https://api.github.com/repos/bilal-fazlani/aws-ssm-param-store-ui/releases/latest")!
+    private let baseURL = "https://api.github.com/repos/bilal-fazlani/aws-ssm-param-store-ui/releases"
+    private let latestURL: URL
 
     private static var hasChecked = false
+
+    init() {
+        latestURL = URL(string: "\(baseURL)/latest")!
+    }
 
     func checkForUpdate() async -> String? {
         guard !Self.hasChecked else { return nil }
@@ -13,7 +18,7 @@ struct UpdateCheckerService {
             return nil
         }
 
-        guard let (data, _) = try? await URLSession.shared.data(from: apiURL) else {
+        guard let (data, _) = try? await URLSession.shared.data(from: latestURL) else {
             return nil
         }
 
@@ -25,6 +30,25 @@ struct UpdateCheckerService {
         let remoteVersion = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
 
         return isNewer(remoteVersion, than: localVersion) ? remoteVersion : nil
+    }
+
+    func fetchReleaseNotes(for version: String) async -> String? {
+        let tag = "v\(version)"
+        guard let url = URL(string: "\(baseURL)/tags/\(tag)") else { return nil }
+
+        guard let (data, response) = try? await URLSession.shared.data(from: url),
+              let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            return nil
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let body = json["body"] as? String,
+              !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+
+        return body
     }
 
     private func isNewer(_ remote: String, than local: String) -> Bool {

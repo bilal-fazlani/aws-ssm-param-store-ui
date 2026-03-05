@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		9CECF3332EDE529A00A17A87 /* AWSClientRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 9CECF3322EDE529A00A17A87 /* AWSClientRuntime */; };
 		9CECF3352EDE529A00A17A87 /* AWSSSM in Frameworks */ = {isa = PBXBuildFile; productRef = 9CECF3342EDE529A00A17A87 /* AWSSSM */; };
+		BCEEC4032EDE529A00A17A88 /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = BCEEC4022EDE529A00A17A88 /* Textual */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +73,7 @@
 			files = (
 				9CECF3352EDE529A00A17A87 /* AWSSSM in Frameworks */,
 				9CECF3332EDE529A00A17A87 /* AWSClientRuntime in Frameworks */,
+				BCEEC4032EDE529A00A17A88 /* Textual in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,6 +136,7 @@
 			packageProductDependencies = (
 				9CECF3322EDE529A00A17A87 /* AWSClientRuntime */,
 				9CECF3342EDE529A00A17A87 /* AWSSSM */,
+				BCEEC4022EDE529A00A17A88 /* Textual */,
 			);
 			productName = AWSSSMParamStoreUI;
 			productReference = 9CECF2E12EDE4CEB00A17A87 /* AWSSSMParamStoreUI.app */;
@@ -219,6 +222,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				9CECF3312EDE529A00A17A87 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+				BCEEC4012EDE529A00A17A88 /* XCRemoteSwiftPackageReference "textual" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9CECF2E22EDE4CEB00A17A87 /* Products */;
@@ -618,6 +622,14 @@
 				minimumVersion = 1.6.7;
 			};
 		};
+		BCEEC4012EDE529A00A17A88 /* XCRemoteSwiftPackageReference "textual" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/textual";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -630,6 +642,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 9CECF3312EDE529A00A17A87 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
 			productName = AWSSSM;
+		};
+		BCEEC4022EDE529A00A17A88 /* Textual */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BCEEC4012EDE529A00A17A88 /* XCRemoteSwiftPackageReference "textual" */;
+			productName = Textual;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

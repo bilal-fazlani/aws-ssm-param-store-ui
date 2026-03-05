@@ -23,6 +23,7 @@ class AppState: ObservableObject {
     @Published var toastMessage: String?
     @Published var isConnected: Bool = false
     @Published var availableUpdateVersion: String?
+    @Published var whatsNewContent: (version: String, body: String)?
     
     private let service = SSMService()
     private var toastTask: Task<Void, Never>?
@@ -458,6 +459,43 @@ class AppState: ObservableObject {
             let checker = UpdateCheckerService()
             availableUpdateVersion = await checker.checkForUpdate()
         }
+    }
+
+    // MARK: - What's New
+
+    func checkWhatsNew() {
+        guard let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String else {
+            return
+        }
+
+        let lastSeenVersion = UserDefaults.standard.string(forKey: "lastSeenVersion")
+
+        guard lastSeenVersion != nil else {
+            // First install — record version silently, no overlay
+            UserDefaults.standard.set(currentVersion, forKey: "lastSeenVersion")
+            return
+        }
+
+        guard lastSeenVersion != currentVersion else {
+            // Same version as last launch — nothing to show
+            return
+        }
+
+        Task {
+            let checker = UpdateCheckerService()
+            if let body = await checker.fetchReleaseNotes(for: currentVersion) {
+                whatsNewContent = (version: currentVersion, body: body)
+            } else {
+                // Fetch failed or no notes — skip overlay but record version so we don't retry forever
+                UserDefaults.standard.set(currentVersion, forKey: "lastSeenVersion")
+            }
+        }
+    }
+
+    func dismissWhatsNew() {
+        guard let version = whatsNewContent?.version else { return }
+        UserDefaults.standard.set(version, forKey: "lastSeenVersion")
+        whatsNewContent = nil
     }
 
     // MARK: - Toast
