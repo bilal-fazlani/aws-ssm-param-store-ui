@@ -137,6 +137,7 @@ struct ContentView: View {
             if appState.currentConnection == nil {
                 ConnectionPickerOverlay(
                     connectionStore: connectionStore,
+                    keyboardEnabled: appState.whatsNewContent == nil,
                     onConnect: { connection in
                         Task { await appState.connect(to: connection) }
                     },
@@ -210,6 +211,7 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: appState.whatsNewContent == nil)
+        .focusedSceneObject(appState)
         .onChange(of: selection) { _, newSelection in
             guard let id = newSelection,
                   let node = findNode(id: id, nodes: appState.rootNodes),

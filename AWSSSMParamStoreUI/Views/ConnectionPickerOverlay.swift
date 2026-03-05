@@ -17,6 +17,7 @@ private struct WindowAccessor: NSViewRepresentable {
 
 struct ConnectionPickerOverlay: View {
     @ObservedObject var connectionStore: ConnectionStore
+    var keyboardEnabled: Bool = true
     var onConnect: (Connection) -> Void
     var onManage: () -> Void
 
@@ -42,15 +43,17 @@ struct ConnectionPickerOverlay: View {
                 .frame(width: 0, height: 0)
                 .opacity(0)
                 .onKeyPress(.upArrow) {
+                    guard keyboardEnabled else { return .ignored }
                     if selectedIndex > 0 { selectedIndex -= 1 }
                     return .handled
                 }
                 .onKeyPress(.downArrow) {
+                    guard keyboardEnabled else { return .ignored }
                     if selectedIndex < connections.count - 1 { selectedIndex += 1 }
                     return .handled
                 }
                 .onKeyPress(.return) {
-                    guard !connections.isEmpty, selectedIndex < connections.count else { return .ignored }
+                    guard keyboardEnabled, !connections.isEmpty, selectedIndex < connections.count else { return .ignored }
                     onConnect(connections[selectedIndex])
                     return .handled
                 }
@@ -136,10 +139,18 @@ struct ConnectionPickerOverlay: View {
         .background(WindowAccessor { ownWindow = $0 })
         .onAppear {
             selectedIndex = 0
-            DispatchQueue.main.async { isFocused = true }
+            if keyboardEnabled {
+                DispatchQueue.main.async { isFocused = true }
+            }
+        }
+        .onChange(of: keyboardEnabled) { _, enabled in
+            if enabled {
+                DispatchQueue.main.async { isFocused = true }
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { notification in
-            guard let notifiedWindow = notification.object as? NSWindow,
+            guard keyboardEnabled,
+                  let notifiedWindow = notification.object as? NSWindow,
                   let ownWindow, notifiedWindow === ownWindow else { return }
             DispatchQueue.main.async { isFocused = true }
         }

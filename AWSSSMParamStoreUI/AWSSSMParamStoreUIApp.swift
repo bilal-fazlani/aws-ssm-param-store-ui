@@ -11,7 +11,8 @@ import SwiftUI
 struct AWSSSMParamStoreUIApp: App {
     // Initialize WindowManager to start observing
     private let windowManager = WindowManager.shared
-    
+    @FocusedObject private var appState: AppState?
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -29,6 +30,11 @@ struct AWSSSMParamStoreUIApp: App {
                     WindowManager.shared.openNewWindow()
                 }
                 .keyboardShortcut("n", modifiers: [.command])
+            }
+            CommandGroup(after: .help) {
+                Button("What's New?") {
+                    appState?.showReleaseNotes()
+                }
             }
         }
     }

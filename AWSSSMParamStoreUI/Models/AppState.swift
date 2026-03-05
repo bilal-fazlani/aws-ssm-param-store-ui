@@ -484,10 +484,36 @@ class AppState: ObservableObject {
         Task {
             let checker = UpdateCheckerService()
             if let body = await checker.fetchReleaseNotes(for: currentVersion) {
+                cacheReleaseNotes(version: currentVersion, body: body)
                 whatsNewContent = (version: currentVersion, body: body)
             } else {
                 // Fetch failed or no notes — skip overlay but record version so we don't retry forever
                 UserDefaults.standard.set(currentVersion, forKey: "lastSeenVersion")
+            }
+        }
+    }
+
+    private func cacheReleaseNotes(version: String, body: String) {
+        let oldVersion = UserDefaults.standard.string(forKey: "cachedReleaseNotesVersion")
+        if let old = oldVersion, old != version {
+            UserDefaults.standard.removeObject(forKey: "releaseNotes.\(old)")
+        }
+        UserDefaults.standard.set(body, forKey: "releaseNotes.\(version)")
+        UserDefaults.standard.set(version, forKey: "cachedReleaseNotesVersion")
+    }
+
+    func showReleaseNotes() {
+        guard let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String else { return }
+        Task {
+            let checker = UpdateCheckerService()
+            if let body = await checker.fetchReleaseNotes(for: currentVersion) {
+                cacheReleaseNotes(version: currentVersion, body: body)
+                whatsNewContent = (version: currentVersion, body: body)
+            } else if UserDefaults.standard.string(forKey: "cachedReleaseNotesVersion") == currentVersion,
+                      let cached = UserDefaults.standard.string(forKey: "releaseNotes.\(currentVersion)") {
+                whatsNewContent = (version: currentVersion, body: cached)
+            } else {
+                errorMessage = "Couldn't load release notes. Check your internet connection and try again."
             }
         }
     }
