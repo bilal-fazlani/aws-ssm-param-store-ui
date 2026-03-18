@@ -243,10 +243,10 @@ struct ContentView: View {
                 .help("Go to parent folder")
             }
             
-           
-            // Center & Right items with spacer-based layout
-            ToolbarItem(placement: .principal) {
-                // Add button (centered via spacers)
+
+            // Center group: Add, Connection, Region, Refresh, Info
+            ToolbarItemGroup(placement: .principal) {
+                // Add button
                 Button {
                     showingAddSheet = true
                 } label: {
@@ -256,35 +256,16 @@ struct ContentView: View {
                 .keyboardShortcut("n", modifiers: [.command, .shift])
                 .help("Add new parameter (⇧⌘N)")
                 .disabled(appState.currentConnection == nil)
-            }
-            
-            ToolbarItem(placement: .principal){
-                // Info button (standalone)
-                Button {
-                    showingShortcuts = true
-                } label: {
-                    Label("Shortcuts", systemImage: "info.circle")
-                        .labelStyle(.iconOnly)
-                }
-                .help("Keyboard Shortcuts")
-                .popover(isPresented: $showingShortcuts, arrowEdge: .bottom) {
-                    ShortcutsPopover()
-                }
-            }
-            
-            // Connection & Region grouped
-            ToolbarItemGroup(placement: .automatic) {
+
                 // Connection selector dropdown
                 Menu {
                     if connectionStore.connections.isEmpty {
-                        // No connections - show add option only
                         Button {
                             showingSettings = true
                         } label: {
                             Label("Add Connection...", systemImage: "plus")
                         }
                     } else {
-                        // List saved connections
                         ForEach(connectionStore.connections) { connection in
                             Button {
                                 Task {
@@ -305,9 +286,9 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        
+
                         Divider()
-                        
+
                         Button {
                             showingSettings = true
                         } label: {
@@ -326,7 +307,6 @@ struct ContentView: View {
                         } else if let connection = appState.currentConnection {
                             Image(systemName: connection.type.icon)
                             Text(connection.name)
-                            // Show error indicator if not connected
                             if !appState.isConnected {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundStyle(.orange)
@@ -341,8 +321,8 @@ struct ContentView: View {
                 .menuIndicator(.hidden)
                 .disabled(appState.isConnecting)
                 .help(appState.isConnecting ? "Connecting..." : (appState.isConnected ? "Select Connection" : "Connection failed - click to retry or choose another"))
-                
-                // Region selector (always visible when connected)
+
+                // Region selector
                 if appState.currentConnection != nil {
                     Menu {
                         Picker("Region", selection: $appState.selectedRegion) {
@@ -362,7 +342,7 @@ struct ContentView: View {
                     .menuIndicator(.hidden)
                     .help("Select Region")
                 }
-                
+
                 // Refresh button
                 Button {
                     Task { await appState.loadData() }
@@ -374,6 +354,30 @@ struct ContentView: View {
                 .keyboardShortcut("r", modifiers: [.command])
                 .help("Refresh (⌘R)")
                 .disabled(appState.currentConnection == nil)
+
+                // Info / Shortcuts button (last in center group)
+                Button {
+                    showingShortcuts = true
+                } label: {
+                    Label("Shortcuts", systemImage: "info.circle")
+                        .labelStyle(.iconOnly)
+                }
+                .help("Keyboard Shortcuts")
+                .popover(isPresented: $showingShortcuts, arrowEdge: .bottom) {
+                    ShortcutsPopover()
+                }
+            }
+
+            // Right side: Inspector toggle (isolated)
+            ToolbarItem(placement: .automatic) {
+                let hasValueNode = selection.flatMap { findNode(id: $0, nodes: appState.rootNodes) }?.isValueNode == true
+                Button {
+                    withAnimation { appState.isInspectorPresented.toggle() }
+                } label: {
+                    Image(systemName: "sidebar.right")
+                }
+                .help("Toggle Inspector (⌥⌘I)")
+                .disabled(!hasValueNode)
             }
         }
         .sheet(isPresented: $showingSettings) {

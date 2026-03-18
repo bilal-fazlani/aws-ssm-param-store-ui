@@ -12,6 +12,15 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
     var lastModified: Date?
     var type: String? // String, StringList, SecureString
     var description: String?
+
+    // Metadata from DescribeParameters (Phase 1)
+    var version: Int?
+    var arn: String?
+    var tier: String?              // "Standard", "Advanced", "Intelligent-Tiering"
+    var lastModifiedUser: String?
+    var keyId: String?             // KMS key alias/ID for SecureString
+    var dataType: String?          // e.g. "text", "aws:ec2:image"
+    var allowedPattern: String?
     
     // Conflict / Edit state
     var isDirty: Bool = false
@@ -129,6 +138,13 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
             self.lastModified = newNode.lastModified
             self.type = newNode.type
             self.description = newNode.description
+            self.version = newNode.version
+            self.arn = newNode.arn
+            self.tier = newNode.tier
+            self.lastModifiedUser = newNode.lastModifiedUser
+            self.keyId = newNode.keyId
+            self.dataType = newNode.dataType
+            self.allowedPattern = newNode.allowedPattern
 
             if newNode.isValueLoaded {
                 // Incoming node has a real value — accept it

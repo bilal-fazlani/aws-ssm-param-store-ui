@@ -24,6 +24,26 @@ class AppState: ObservableObject {
     @Published var isConnected: Bool = false
     @Published var availableUpdateVersion: String?
     @Published var whatsNewContent: (version: String, body: String)?
+
+    // MARK: - Inspector
+    @Published var isInspectorPresented: Bool = false
+    @Published var historyCache: [String: ParameterHistoryCache] = [:]
+    @Published var tagsCache: [String: TagsState] = [:]
+
+    struct ParameterHistoryCache {
+        var entries: [SSMClientTypes.ParameterHistory] = []
+        var nextToken: String?
+        var cachedVersion: Int?
+        var isLoading: Bool = false
+        var error: String?
+        var hasMore: Bool { nextToken != nil }
+    }
+
+    struct TagsState {
+        var tags: [SSMClientTypes.Tag] = []
+        var isLoading: Bool = false
+        var error: String?
+    }
     
     private let service = SSMService()
     private var toastTask: Task<Void, Never>?
@@ -47,6 +67,8 @@ class AppState: ObservableObject {
         
         // Clear old data immediately to avoid showing stale content
         rootNodes = []
+        historyCache = [:]
+        tagsCache = [:]
         
         do {
             // Get credentials — single Touch ID prompt covers both secret and session token
@@ -104,6 +126,8 @@ class AppState: ObservableObject {
         isConnected = false
         rootNodes = []
         lastUpdated = nil
+        historyCache = [:]
+        tagsCache = [:]
     }
     
     // MARK: - Data Loading
@@ -238,7 +262,24 @@ class AppState: ObservableObject {
                     leafNode.lastModified = meta.lastModifiedDate
                     leafNode.description = meta.description
                     leafNode.isValueLoaded = false
+                    leafNode.version = meta.version
+                    leafNode.arn = meta.arn
+                    leafNode.tier = meta.tier?.rawValue
+                    leafNode.lastModifiedUser = meta.lastModifiedUser
+                    leafNode.keyId = meta.keyId
+                    leafNode.dataType = meta.dataType
+                    leafNode.allowedPattern = meta.allowedPattern
                     insertNode(leafNode, into: &rootNodes)
+                } else {
+                    updateNode(id: fullPath, in: &rootNodes) { n in
+                        n.version = meta.version
+                        n.arn = meta.arn
+                        n.tier = meta.tier?.rawValue
+                        n.lastModifiedUser = meta.lastModifiedUser
+                        n.keyId = meta.keyId
+                        n.dataType = meta.dataType
+                        n.allowedPattern = meta.allowedPattern
+                    }
                 }
             }
         }
@@ -452,6 +493,101 @@ class AppState: ObservableObject {
         return nil
     }
     
+    // MARK: - Inspector: History
+
+    func loadHistory(for path: String, nodeVersion: Int?) async {
+        if let cached = historyCache[path],
+           cached.cachedVersion == nodeVersion,
+           !cached.entries.isEmpty {
+            return
+        }
+        historyCache[path] = ParameterHistoryCache(cachedVersion: nodeVersion, isLoading: true)
+        do {
+            let result = try await service.getParameterHistory(name: path)
+            historyCache[path] = ParameterHistoryCache(
+                entries: result.entries,
+                nextToken: result.nextToken,
+                cachedVersion: nodeVersion
+            )
+        } catch {
+            historyCache[path] = ParameterHistoryCache(
+                cachedVersion: nodeVersion,
+                error: permissionErrorMessage(for: error) ?? error.localizedDescription
+            )
+        }
+    }
+
+    func loadMoreHistory(for path: String) async {
+        guard var cache = historyCache[path],
+              let nextToken = cache.nextToken,
+              !cache.isLoading else { return }
+        cache.isLoading = true
+        historyCache[path] = cache
+        do {
+            let result = try await service.getParameterHistory(name: path, nextToken: nextToken)
+            cache.entries.append(contentsOf: result.entries)
+            cache.nextToken = result.nextToken
+            cache.isLoading = false
+            historyCache[path] = cache
+        } catch {
+            cache.isLoading = false
+            cache.error = error.localizedDescription
+            historyCache[path] = cache
+        }
+    }
+
+    func refreshHistory(for path: String) async {
+        historyCache.removeValue(forKey: path)
+        let version = findNode(id: path, nodes: rootNodes)?.version
+        await loadHistory(for: path, nodeVersion: version)
+    }
+
+    // MARK: - Inspector: Tags
+
+    func loadTags(for path: String) async {
+        tagsCache[path] = TagsState(isLoading: true)
+        do {
+            let tags = try await service.listTags(for: path)
+            tagsCache[path] = TagsState(tags: tags)
+        } catch {
+            tagsCache[path] = TagsState(
+                error: permissionErrorMessage(for: error) ?? error.localizedDescription
+            )
+        }
+    }
+
+    func addTag(to path: String, key: String, value: String) async {
+        let tag = SSMClientTypes.Tag(key: key, value: value)
+        tagsCache[path]?.tags.append(tag)
+        do {
+            try await service.addTags(to: path, tags: [tag])
+            showToast("Tag added")
+        } catch {
+            tagsCache[path]?.tags.removeAll { $0.key == key }
+            errorMessage = "Failed to add tag: \(error.localizedDescription)"
+        }
+    }
+
+    func removeTag(from path: String, key: String) async {
+        let removed = tagsCache[path]?.tags.first { $0.key == key }
+        tagsCache[path]?.tags.removeAll { $0.key == key }
+        do {
+            try await service.removeTags(from: path, tagKeys: [key])
+            showToast("Tag removed")
+        } catch {
+            if let removed { tagsCache[path]?.tags.append(removed) }
+            errorMessage = "Failed to remove tag: \(error.localizedDescription)"
+        }
+    }
+
+    private func permissionErrorMessage(for error: Error) -> String? {
+        let desc = String(describing: error)
+        if desc.contains("AccessDeniedException") || desc.contains("AccessDenied") {
+            return "Insufficient permissions to access this resource."
+        }
+        return nil
+    }
+
     // MARK: - Update Check
 
     func checkForUpdates() {

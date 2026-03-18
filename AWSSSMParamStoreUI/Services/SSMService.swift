@@ -212,6 +212,52 @@ actor SSMService {
         let input = DeleteParameterInput(name: name)
         _ = try await client.deleteParameter(input: input)
     }
+
+    func getParameterHistory(
+        name: String,
+        maxResults: Int = 50,
+        nextToken: String? = nil
+    ) async throws -> (entries: [SSMClientTypes.ParameterHistory], nextToken: String?) {
+        guard let client = client else { throw ServiceError.notConfigured }
+        let input = GetParameterHistoryInput(
+            maxResults: maxResults,
+            name: name,
+            nextToken: nextToken,
+            withDecryption: true
+        )
+        let output = try await client.getParameterHistory(input: input)
+        return (entries: output.parameters ?? [], nextToken: output.nextToken)
+    }
+
+    func listTags(for parameterName: String) async throws -> [SSMClientTypes.Tag] {
+        guard let client = client else { throw ServiceError.notConfigured }
+        let input = ListTagsForResourceInput(
+            resourceId: parameterName,
+            resourceType: .parameter
+        )
+        let output = try await client.listTagsForResource(input: input)
+        return output.tagList ?? []
+    }
+
+    func addTags(to parameterName: String, tags: [SSMClientTypes.Tag]) async throws {
+        guard let client = client else { throw ServiceError.notConfigured }
+        let input = AddTagsToResourceInput(
+            resourceId: parameterName,
+            resourceType: .parameter,
+            tags: tags
+        )
+        _ = try await client.addTagsToResource(input: input)
+    }
+
+    func removeTags(from parameterName: String, tagKeys: [String]) async throws {
+        guard let client = client else { throw ServiceError.notConfigured }
+        let input = RemoveTagsFromResourceInput(
+            resourceId: parameterName,
+            resourceType: .parameter,
+            tagKeys: tagKeys
+        )
+        _ = try await client.removeTagsFromResource(input: input)
+    }
     
     /// Test the current connection by attempting to list parameters
     func testConnection() async throws {

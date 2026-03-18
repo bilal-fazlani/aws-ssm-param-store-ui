@@ -239,8 +239,19 @@ struct DetailView: View {
                     .help(isValueRevealed ? "Hide value" : "Reveal value")
                 }
 
+                // Inspector toggle button
+                Button {
+                    withAnimation {
+                        appState.isInspectorPresented.toggle()
+                    }
+                } label: {
+                    Image(systemName: "sidebar.trailing")
+                        .foregroundStyle(appState.isInspectorPresented ? Color.accentColor : Color.secondary)
+                }
+                .help("Toggle Inspector (⌥⌘I)")
+
                 Spacer()
-                
+
                 // Last modified info
                 if let lastMod = node.lastModified {
                     HStack(spacing: 6) {
@@ -385,6 +396,16 @@ struct DetailView: View {
             }
             .keyboardShortcut(.escape, modifiers: [])
             .opacity(0)
+            Button("") {
+                withAnimation { appState.isInspectorPresented.toggle() }
+            }
+            .keyboardShortcut("i", modifiers: [.command, .option])
+            .opacity(0)
+        }
+        .inspector(isPresented: $appState.isInspectorPresented) {
+            InspectorView(node: node)
+                .environmentObject(appState)
+                .inspectorColumnWidth(min: 220, ideal: 280, max: 360)
         }
     }
 }
