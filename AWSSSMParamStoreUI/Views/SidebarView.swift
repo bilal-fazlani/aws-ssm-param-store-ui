@@ -196,6 +196,7 @@ struct NodeTreeView: View {
                 } label: {
                     FolderRow(
                         node: node,
+                        isSelected: selection == node.id,
                         onAdd: { onAddUnderFolder(node.fullPath) },
                         onDelete: { showDeleteConfirmation = true }
                     )
@@ -327,9 +328,16 @@ struct ParameterRow: View {
 
 struct FolderRow: View {
     let node: ConfigNode
+    let isSelected: Bool
     let onAdd: () -> Void
     let onDelete: () -> Void
     @State private var isHovered: Bool = false
+
+    // White pops on the selected-row accent-blue background; accent pops on the
+    // default dark row background. Either way the "+" stays readable.
+    private var plusColor: Color {
+        isSelected ? .white : .accentColor
+    }
 
     private var shortType: String {
         switch node.type ?? "String" {
@@ -370,10 +378,10 @@ struct FolderRow: View {
                 Button(action: onAdd) {
                     Image(systemName: "plus")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(plusColor)
                         .frame(width: 20, height: 20)
                 }
-                .buttonStyle(HoverTintButtonStyle())
+                .buttonStyle(HoverTintButtonStyle(tint: plusColor))
                 .help("Add parameter under \(node.fullPath)")
                 .transition(.opacity)
             } else {
@@ -436,12 +444,15 @@ private struct AddParameterFooterButton: View {
 // MARK: - Hover Tint Button Style
 
 private struct HoverTintButtonStyle: ButtonStyle {
+    var tint: Color = .accentColor
+
     func makeBody(configuration: Configuration) -> some View {
-        HoverTintBody(configuration: configuration)
+        HoverTintBody(configuration: configuration, tint: tint)
     }
 
     private struct HoverTintBody: View {
         let configuration: ButtonStyle.Configuration
+        let tint: Color
         @State private var isHot: Bool = false
 
         var body: some View {
@@ -449,7 +460,7 @@ private struct HoverTintButtonStyle: ButtonStyle {
                 .padding(2)
                 .background(
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(isHot ? Color.accentColor.opacity(0.18) : Color.clear)
+                        .fill(isHot ? tint.opacity(0.22) : Color.clear)
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 5))
                 .onHover { isHot = $0 }
