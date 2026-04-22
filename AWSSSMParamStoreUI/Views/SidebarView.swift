@@ -62,6 +62,7 @@ struct SidebarView: View {
                             focusRequest = false
                             DispatchQueue.main.async {
                                 isListFocused = true
+                                // Scroll to selected item if it exists
                                 if let selectedId = selection {
                                     proxy.scrollTo(selectedId)
                                 }
@@ -75,12 +76,7 @@ struct SidebarView: View {
             Divider()
 
             AddParameterFooterButton(
-                isDisabled: appState.currentConnection == nil || appState.isConnecting,
-                disabledReason: {
-                    if appState.isConnecting { return "Connecting…" }
-                    if appState.currentConnection == nil { return "Connect to a source to add parameters" }
-                    return nil
-                }(),
+                disabledReason: footerDisabledReason,
                 onTap: { onAdd(nil) }
             )
         }
@@ -98,6 +94,14 @@ struct SidebarView: View {
         }
     }
     
+    // MARK: - Footer
+
+    private var footerDisabledReason: String? {
+        if appState.isConnecting { return "Connecting…" }
+        if appState.currentConnection == nil { return "Connect to a source to add parameters" }
+        return nil
+    }
+
     // MARK: - Node Lookup
 
     private func findNode(id: String, in nodes: [ConfigNode]) -> ConfigNode? {
@@ -389,7 +393,6 @@ struct FolderRow: View {
 // MARK: - Add Parameter Footer Button
 
 private struct AddParameterFooterButton: View {
-    let isDisabled: Bool
     let disabledReason: String?
     let onTap: () -> Void
 
@@ -406,8 +409,8 @@ private struct AddParameterFooterButton: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.regular)
-        .disabled(isDisabled)
-        .help(isDisabled ? (disabledReason ?? "Unavailable") : "Add Parameter (⇧⌘N)")
+        .disabled(disabledReason != nil)
+        .help(disabledReason ?? "Add Parameter (⇧⌘N)")
         .padding(10)
     }
 }
