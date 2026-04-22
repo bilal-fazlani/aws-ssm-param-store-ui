@@ -720,8 +720,9 @@ struct AddParameterOverlay: View {
     @FocusState private var isNameFocused: Bool
 
     private var isValid: Bool {
-        !parameterName.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !parameterValue.isEmpty
+        let trimmed = parameterName.trimmingCharacters(in: .whitespaces)
+        let sanitized = String(trimmed.drop(while: { $0 == "/" }))
+        return !sanitized.isEmpty && !parameterValue.isEmpty
     }
 
     private var breadcrumbText: String {
