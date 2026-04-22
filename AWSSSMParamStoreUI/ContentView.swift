@@ -209,16 +209,6 @@ struct ContentView: View {
         .onChange(of: showingAddSheet) { _, isShowing in
             if !isShowing { pendingAddParentPath = nil }
         }
-        .background {
-            Button("") {
-                pendingAddParentPath = nil
-                showingAddSheet = true
-            }
-            .keyboardShortcut("n", modifiers: [.command, .shift])
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .disabled(appState.currentConnection == nil)
-        }
         .navigationTitle(windowTitle)
         .navigationSubtitle(lastUpdatedText)
         .toast(message: $appState.toastMessage, icon: "arrow.triangle.2.circlepath")
@@ -452,6 +442,15 @@ struct ContentView: View {
             }
             .keyboardShortcut("f", modifiers: [.command])
             .opacity(0)
+
+            // Hidden button for SHIFT+CMD+N new parameter
+            Button("") {
+                pendingAddParentPath = nil
+                showingAddSheet = true
+            }
+            .keyboardShortcut("n", modifiers: [.command, .shift])
+            .opacity(0)
+            .disabled(appState.currentConnection == nil)
         }
         .onChange(of: appState.selectedRegion) { _, newRegion in
             guard appState.currentConnection != nil else { return }
@@ -599,7 +598,7 @@ struct RootFolderView: View {
                         .foregroundStyle(.secondary)
                     Text("No Parameters")
                         .font(.title2.weight(.semibold))
-                    Text("Click the Add button to create your first parameter.")
+                    Text("Use the Add button in the sidebar or press ⇧⌘N to create your first parameter.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
