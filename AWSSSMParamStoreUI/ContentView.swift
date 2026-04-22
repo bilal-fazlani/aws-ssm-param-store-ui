@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var selection: String?
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showingAddSheet = false
+    @State private var pendingAddParentPath: String? = nil
     @State private var showingShortcuts = false
     @State private var showingSettings = false
     @State private var showingSearch = false
@@ -48,6 +49,13 @@ struct ContentView: View {
         }
     }
     
+    private var effectivePathPrefix: String {
+        if let explicit = pendingAddParentPath {
+            return explicit.hasSuffix("/") ? explicit : explicit + "/"
+        }
+        return newValuePathPrefix
+    }
+
     private var windowTitle: String {
         if let selection = selection,
            let node = findNode(id: selection, nodes: appState.rootNodes) {
@@ -76,7 +84,11 @@ struct ContentView: View {
             SidebarView(
                 selection: $selection,
                 focusRequest: $sidebarFocusRequest,
-                onEnterDetail: { detailFocusRequest = true }
+                onEnterDetail: { detailFocusRequest = true },
+                onAdd: { parentPath in
+                    pendingAddParentPath = parentPath
+                    showingAddSheet = true
+                }
             )
             .environmentObject(appState)
             .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 400)
@@ -169,7 +181,7 @@ struct ContentView: View {
             if showingAddSheet {
                 AddParameterOverlay(
                     isPresented: $showingAddSheet,
-                    pathPrefix: newValuePathPrefix,
+                    pathPrefix: effectivePathPrefix,
                     pathExists: { path in
                         let strippedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
                         return findNode(id: path, nodes: appState.rootNodes) != nil
@@ -177,7 +189,8 @@ struct ContentView: View {
                     },
                     onAdd: { name, value, type, description in
                         Task {
-                            let path = newValuePathPrefix + name
+                            let sanitized = String(name.drop(while: { $0 == "/" }))
+                            let path = effectivePathPrefix + sanitized
                             let added = await appState.addParameter(path: path, value: value, type: type, description: description)
                             if added {
                                 selection = path
@@ -190,6 +203,9 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.15), value: showingAddSheet)
+        .onChange(of: showingAddSheet) { _, isShowing in
+            if !isShowing { pendingAddParentPath = nil }
+        }
         .navigationTitle(windowTitle)
         .navigationSubtitle(lastUpdatedText)
         .toast(message: $appState.toastMessage, icon: "arrow.triangle.2.circlepath")
