@@ -183,9 +183,14 @@ struct ContentView: View {
                     isPresented: $showingAddSheet,
                     pathPrefix: effectivePathPrefix,
                     pathExists: { path in
+                        // Only an existing *value* blocks the add. A synthetic folder node
+                        // (one that exists only because deeper params share this as a path
+                        // prefix) must still allow hybrid adds — a path can legitimately be
+                        // both a folder and a value.
                         let strippedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
-                        return findNode(id: path, nodes: appState.rootNodes) != nil
-                            || findNode(id: strippedPath, nodes: appState.rootNodes) != nil
+                        let exactNode = findNode(id: path, nodes: appState.rootNodes)
+                        let strippedNode = findNode(id: strippedPath, nodes: appState.rootNodes)
+                        return (exactNode?.isValueNode ?? false) || (strippedNode?.isValueNode ?? false)
                     },
                     onAdd: { name, value, type, description in
                         // Capture prefix synchronously — dismiss() fires right after onAdd
