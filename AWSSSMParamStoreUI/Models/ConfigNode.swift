@@ -60,6 +60,21 @@ struct ConfigNode: Identifiable, Hashable, Equatable {
         }
         return isValueNode ? childCount + 1 : childCount
     }
+
+    /// All SSM parameter paths at or below this node. For a folder this is every
+    /// descendant leaf (and the node itself if it's a hybrid); for a plain leaf
+    /// this is just `[fullPath]`. Same traversal `AppState.collectLeafPaths`
+    /// uses internally when fanning out deletes, exposed here so views can
+    /// preview what a delete will touch without reaching into AppState.
+    var allLeafPaths: [String] {
+        if isLeaf { return [fullPath] }
+        var paths: [String] = []
+        if isValueNode { paths.append(fullPath) }
+        for child in children ?? [] {
+            paths.append(contentsOf: child.allLeafPaths)
+        }
+        return paths
+    }
     
     init(name: String, fullPath: String, value: String? = nil, children: [ConfigNode]? = nil) {
         self.id = fullPath

@@ -500,12 +500,7 @@ struct ContentView: View {
     private var deleteAlertMessage: String {
         guard let id = selection,
               let node = findNode(id: id, nodes: appState.rootNodes) else { return "" }
-        if node.isLeaf {
-            return "Are you sure you want to delete \"\(node.name)\"? This action cannot be undone."
-        } else {
-            let count = node.totalDescendantCount
-            return "Are you sure you want to delete \"\(node.name)\" and all \(count) items inside? This action cannot be undone."
-        }
+        return deleteConfirmationMessage(for: node)
     }
     
     func findNode(id: String, nodes: [ConfigNode]) -> ConfigNode? {
