@@ -646,8 +646,6 @@ struct RootFolderView: View {
 }
 
 
-// MARK: - Add Parameter Sheet
-
 // MARK: - Shortcuts Popover
 
 struct ShortcutsPopover: View {
@@ -705,6 +703,8 @@ enum ParameterType: String, CaseIterable {
     case stringList = "StringList"
     case secureString = "SecureString"
 }
+
+// MARK: - Add Parameter Sheet
 
 struct AddParameterOverlay: View {
     @Binding var isPresented: Bool
