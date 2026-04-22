@@ -239,17 +239,6 @@ struct DetailView: View {
                     .help(isValueRevealed ? "Hide value" : "Reveal value")
                 }
 
-                // Inspector toggle button
-                Button {
-                    withAnimation {
-                        appState.isInspectorPresented.toggle()
-                    }
-                } label: {
-                    Image(systemName: "sidebar.trailing")
-                        .foregroundStyle(appState.isInspectorPresented ? Color.accentColor : Color.secondary)
-                }
-                .help("Toggle Inspector (⌥⌘I)")
-
                 Spacer()
 
                 // Last modified info
