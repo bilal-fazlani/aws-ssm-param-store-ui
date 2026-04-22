@@ -724,6 +724,11 @@ struct AddParameterOverlay: View {
         !parameterValue.isEmpty
     }
 
+    private var breadcrumbText: String {
+        if pathPrefix == "/" { return "root" }
+        return pathPrefix.hasSuffix("/") ? String(pathPrefix.dropLast()) : pathPrefix
+    }
+
     private func dismiss() {
         parameterName = ""
         parameterValue = ""
@@ -735,12 +740,14 @@ struct AddParameterOverlay: View {
 
     private func submit() {
         guard isValid else { return }
-        let fullPath = pathPrefix + parameterName.trimmingCharacters(in: .whitespaces)
+        let trimmed = parameterName.trimmingCharacters(in: .whitespaces)
+        let sanitized = String(trimmed.drop(while: { $0 == "/" }))
+        let fullPath = pathPrefix + sanitized
         if pathExists(fullPath) {
             withAnimation(.easeInOut(duration: 0.15)) { showsDuplicateError = true }
             return
         }
-        onAdd(parameterName, parameterValue, parameterType, parameterDescription.isEmpty ? nil : parameterDescription)
+        onAdd(sanitized, parameterValue, parameterType, parameterDescription.isEmpty ? nil : parameterDescription)
         dismiss()
     }
 
@@ -763,35 +770,43 @@ struct AddParameterOverlay: View {
                 .padding(.top, 60)
                 .padding(.bottom, 4)
 
+                // ── Breadcrumb ───────────────────────────────────────────────
+                HStack(spacing: 6) {
+                    Text("Adding under")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(breadcrumbText)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.head)
+                    Spacer()
+                }
+                .padding(.horizontal, 48)
+                .padding(.bottom, 16)
+
                 // ── Fields area — scrollable, floats on glass ────────────────
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-                        // Path
-                        fieldGroup(label: "Path") {
-                            HStack(spacing: 0) {
-                                Text(pathPrefix)
-                                    .foregroundStyle(.primary)
-                                    .font(.system(.body, design: .monospaced))
-                                    .lineLimit(1)
-                                    .truncationMode(.head)
-                                TextField("…enter path", text: $parameterName)
-                                    .font(.system(.body, design: .monospaced))
-                                    .textFieldStyle(.plain)
-                                    .focused($isNameFocused)
-                                    .onSubmit { submit() }
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .strokeBorder(
-                                        showsDuplicateError
-                                            ? AnyShapeStyle(Color.red.opacity(0.8))
-                                            : AnyShapeStyle(.separator),
-                                        lineWidth: showsDuplicateError ? 1.5 : 0.5
-                                    )
-                            )
+                        // Name
+                        fieldGroup(label: "Name") {
+                            TextField("parameter name", text: $parameterName)
+                                .font(.system(.body, design: .monospaced))
+                                .textFieldStyle(.plain)
+                                .focused($isNameFocused)
+                                .onSubmit { submit() }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .strokeBorder(
+                                            showsDuplicateError
+                                                ? AnyShapeStyle(Color.red.opacity(0.8))
+                                                : AnyShapeStyle(.separator),
+                                            lineWidth: showsDuplicateError ? 1.5 : 0.5
+                                        )
+                                )
 
                             if showsDuplicateError {
                                 HStack(spacing: 4) {
