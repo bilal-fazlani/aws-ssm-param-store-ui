@@ -391,10 +391,9 @@ struct FolderRow: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        .animation(.easeInOut(duration: 0.12), value: isHovered)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.12)) {
-                isHovered = hovering
-            }
+            isHovered = hovering
         }
         .contextMenu {
             Button("Copy Path", systemImage: "link") {
