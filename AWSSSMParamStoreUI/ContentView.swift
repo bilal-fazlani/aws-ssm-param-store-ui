@@ -56,6 +56,14 @@ struct ContentView: View {
         return newValuePathPrefix
     }
 
+    // True whenever a modal overlay is presented — the Add sheet, the Search
+    // sheet, or the Connection Picker (which fills the window when no
+    // connection exists). Every background surface disables itself on this
+    // flag so the user can't poke at the app behind an open modal.
+    private var isModalOverlayShowing: Bool {
+        showingAddSheet || showingSearch || appState.currentConnection == nil
+    }
+
     private var windowTitle: String {
         if let selection = selection,
            let node = findNode(id: selection, nodes: appState.rootNodes) {
@@ -92,58 +100,62 @@ struct ContentView: View {
             )
             .environmentObject(appState)
             .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 400)
+            .disabled(isModalOverlayShowing)
         } detail: {
-            if let selection = selection,
-               let node = findNode(id: selection, nodes: appState.rootNodes) {
-                if node.isLeaf {
-                    DetailView(
-                        node: node,
-                        selection: $selection,
-                        focusRequest: $detailFocusRequest,
-                        onNavigateToSidebar: { sidebarFocusRequest = true }
-                    )
-                    .environmentObject(appState)
-                    .id(node.id)
-                } else if node.isValueNode {
-                    VStack(spacing: 0) {
-                        Picker("", selection: $hybridDetailMode) {
-                            Text("Value").tag(HybridDetailMode.value)
-                            Text("Contents").tag(HybridDetailMode.contents)
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-                        .frame(maxWidth: 200)
-                        .padding(.horizontal)
-                        .padding(.top, 10)
-
-                        Divider()
-                            .padding(.top, 8)
-
-                        if hybridDetailMode == .value {
-                            DetailView(
-                                node: node,
-                                selection: $selection,
-                                focusRequest: $detailFocusRequest,
-                                onNavigateToSidebar: { sidebarFocusRequest = true }
-                            )
-                            .environmentObject(appState)
-                            .id(node.id + "/value")
-                        } else {
-                            FolderSummaryView(node: node, selection: $selection)
-                                .environmentObject(appState)
-                                .id(node.id + "/contents")
-                        }
-                    }
-                } else {
-                    FolderSummaryView(node: node, selection: $selection)
+            Group {
+                if let selection = selection,
+                   let node = findNode(id: selection, nodes: appState.rootNodes) {
+                    if node.isLeaf {
+                        DetailView(
+                            node: node,
+                            selection: $selection,
+                            focusRequest: $detailFocusRequest,
+                            onNavigateToSidebar: { sidebarFocusRequest = true }
+                        )
                         .environmentObject(appState)
                         .id(node.id)
+                    } else if node.isValueNode {
+                        VStack(spacing: 0) {
+                            Picker("", selection: $hybridDetailMode) {
+                                Text("Value").tag(HybridDetailMode.value)
+                                Text("Contents").tag(HybridDetailMode.contents)
+                            }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                            .frame(maxWidth: 200)
+                            .padding(.horizontal)
+                            .padding(.top, 10)
+
+                            Divider()
+                                .padding(.top, 8)
+
+                            if hybridDetailMode == .value {
+                                DetailView(
+                                    node: node,
+                                    selection: $selection,
+                                    focusRequest: $detailFocusRequest,
+                                    onNavigateToSidebar: { sidebarFocusRequest = true }
+                                )
+                                .environmentObject(appState)
+                                .id(node.id + "/value")
+                            } else {
+                                FolderSummaryView(node: node, selection: $selection)
+                                    .environmentObject(appState)
+                                    .id(node.id + "/contents")
+                            }
+                        }
+                    } else {
+                        FolderSummaryView(node: node, selection: $selection)
+                            .environmentObject(appState)
+                            .id(node.id)
+                    }
+                } else {
+                    // Root level - show as folder view
+                    RootFolderView(selection: $selection)
+                        .environmentObject(appState)
                 }
-            } else {
-                // Root level - show as folder view
-                RootFolderView(selection: $selection)
-                    .environmentObject(appState)
             }
+            .disabled(isModalOverlayShowing)
         }
         .overlay {
             if appState.currentConnection == nil {
@@ -256,7 +268,7 @@ struct ContentView: View {
                 .keyboardShortcut("h", modifiers: [.command])
                 .disabled(selection == nil)
                 .help("Go to home (⌘H)")
-                
+
                 Button {
                     selection = parentId
                 } label: {
@@ -393,6 +405,10 @@ struct ContentView: View {
                 .disabled(!hasValueNode)
             }
         }
+        // Hide the entire window toolbar while a modal overlay is up. This
+        // also removes the system-provided sidebar toggle that SwiftUI has
+        // no public API to individually disable.
+        .toolbar(isModalOverlayShowing ? .hidden : .automatic, for: .windowToolbar)
         .sheet(isPresented: $showingSettings) {
             ConnectionPickerSheet(
                 connectionStore: connectionStore,
@@ -432,6 +448,7 @@ struct ContentView: View {
             }
             .keyboardShortcut("1", modifiers: [.command])
             .opacity(0)
+            .disabled(isModalOverlayShowing)
 
             // Hidden button for CMD+Delete to delete selected sidebar item
             Button("") {
@@ -440,6 +457,7 @@ struct ContentView: View {
             }
             .keyboardShortcut(.delete, modifiers: [.command])
             .opacity(0)
+            .disabled(isModalOverlayShowing)
 
             // Hidden button for CMD+F search
             Button("") {
@@ -447,6 +465,7 @@ struct ContentView: View {
             }
             .keyboardShortcut("f", modifiers: [.command])
             .opacity(0)
+            .disabled(isModalOverlayShowing)
 
             // Hidden button for SHIFT+CMD+N new parameter
             Button("") {
@@ -455,7 +474,7 @@ struct ContentView: View {
             }
             .keyboardShortcut("n", modifiers: [.command, .shift])
             .opacity(0)
-            .disabled(appState.currentConnection == nil)
+            .disabled(appState.currentConnection == nil || isModalOverlayShowing)
         }
         .onChange(of: appState.selectedRegion) { _, newRegion in
             guard appState.currentConnection != nil else { return }
