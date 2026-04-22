@@ -92,7 +92,7 @@ struct SearchOverlayView: View {
             }
         }
 
-        for node in collectLeaves(rootNodes) {
+        for node in collectValueNodes(rootNodes) {
             let nameLower = node.name.lowercased()
             if nameLower == q {
                 exactLeafMatches.append(SearchResult(id: node.id, node: node, kind: .exactName))
@@ -124,9 +124,19 @@ struct SearchOverlayView: View {
         descriptionMatches.sort { $0.node.fullPath < $1.node.fullPath }
         valueMatches.sort { $0.node.fullPath < $1.node.fullPath }
 
-        return exactFolderMatches + exactLeafMatches
-             + partialFolderMatches + partialLeafMatches
-             + pathMatches + descriptionMatches + valueMatches
+        // A hybrid node can surface in both a folder bucket and a value-node
+        // bucket (same name, or folder-name match + description match). Keep
+        // only the highest-priority occurrence per node id by walking the
+        // concatenated list in bucket order.
+        let concatenated = exactFolderMatches + exactLeafMatches
+                         + partialFolderMatches + partialLeafMatches
+                         + pathMatches + descriptionMatches + valueMatches
+        var seen = Set<String>()
+        return concatenated.filter { result in
+            if seen.contains(result.id) { return false }
+            seen.insert(result.id)
+            return true
+        }
     }
 
     var body: some View {
@@ -317,9 +327,15 @@ struct SearchOverlayView: View {
         selectedIndex = newIndex
     }
 
-    private func collectLeaves(_ nodes: [ConfigNode]) -> [ConfigNode] {
-        nodes.flatMap { node in
-            node.isLeaf ? [node] : collectLeaves(node.children ?? [])
+    /// Returns every node that represents an actual SSM parameter — plain leaves
+    /// AND hybrid nodes (paths that are both a folder and a value). Hybrids also
+    /// appear in `collectFolders`, so `results` dedupes by node id afterwards to
+    /// ensure each hybrid surfaces once in the highest-priority bucket.
+    private func collectValueNodes(_ nodes: [ConfigNode]) -> [ConfigNode] {
+        nodes.flatMap { node -> [ConfigNode] in
+            let self_ = node.isValueNode ? [node] : []
+            let recurse = node.children.map { collectValueNodes($0) } ?? []
+            return self_ + recurse
         }
     }
 
@@ -358,15 +374,25 @@ struct SearchResultRow: View {
     let isSelected: Bool
     let onTap: () -> Void
 
+    // Hybrid = folder AND value. Render with folder icon but also surface the
+    // parameter type pill so users can tell at a glance it's both.
+    private var isHybrid: Bool {
+        !result.node.isLeaf && result.node.isValueNode
+    }
+
+    private var showsAsFolder: Bool {
+        result.isFolder || isHybrid
+    }
+
     private var iconColor: Color {
-        if result.isFolder { return .blue }
+        if showsAsFolder { return .blue }
         if result.node.type == "SecureString" { return .red }
         if result.node.type == "StringList" { return .purple }
         return .gray
     }
 
     private var iconName: String {
-        if result.isFolder { return "folder.fill" }
+        if showsAsFolder { return "folder.fill" }
         if result.node.type == "SecureString" { return "lock.fill" }
         if result.node.type == "StringList" { return "list.bullet" }
         return "doc.text.fill"
@@ -408,8 +434,9 @@ struct SearchResultRow: View {
                     .lineLimit(1)
                     .truncationMode(.head)
 
-                    // Folder: child count badge
-                    if result.isFolder {
+                    // Folder/hybrid: child count badge. Hybrids get BOTH pills
+                    // so the user can see the path is folder + param.
+                    if showsAsFolder {
                         let childCount = result.node.children?.count ?? 0
                         Text("\(childCount)")
                             .font(.caption2.weight(.semibold))
@@ -417,8 +444,10 @@ struct SearchResultRow: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.secondary.opacity(0.1), in: Capsule())
-                    } else if let type = result.node.type {
-                        // Leaf: type badge
+                    }
+                    // Leaf or hybrid: type badge. (Plain synthetic folders have
+                    // no type, so this naturally skips them.)
+                    if !result.isFolder || isHybrid, let type = result.node.type {
                         Text(abbreviateType(type))
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(.tertiary)
