@@ -11,7 +11,7 @@ struct ContentView: View {
     @State private var selection: String?
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showingAddSheet = false
-    @State private var pendingAddParentPath: String? = nil
+    @State private var pendingAddParentPath: String?
     @State private var showingShortcuts = false
     @State private var showingSettings = false
     @State private var showingSearch = false
@@ -188,9 +188,12 @@ struct ContentView: View {
                             || findNode(id: strippedPath, nodes: appState.rootNodes) != nil
                     },
                     onAdd: { name, value, type, description in
+                        // Capture prefix synchronously — dismiss() fires right after onAdd
+                        // returns, which clears pendingAddParentPath via .onChange below.
+                        let prefix = effectivePathPrefix
                         Task {
                             let sanitized = String(name.drop(while: { $0 == "/" }))
-                            let path = effectivePathPrefix + sanitized
+                            let path = prefix + sanitized
                             let added = await appState.addParameter(path: path, value: value, type: type, description: description)
                             if added {
                                 selection = path
