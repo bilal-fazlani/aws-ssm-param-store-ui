@@ -10,65 +10,79 @@ struct SidebarView: View {
     @FocusState private var isListFocused: Bool
 
     var body: some View {
-        Group {
-            // Main List with shimmer loading or content
-            if appState.isLoading && appState.rootNodes.isEmpty {
-                // Shimmer skeleton while loading
-                List {
-                    ForEach(0..<8, id: \.self) { i in
-                        ShimmerListItem(isFolder: i % 3 == 0)
-                    }
-                }
-                .listStyle(.sidebar)
-            } else {
-                ScrollViewReader { proxy in
-                    List(selection: $selection) {
-                        let rootFolders = appState.rootNodes.filter { !$0.isLeaf }
-                        let rootLeaves  = appState.rootNodes.filter {  $0.isLeaf }
-                        ForEach(rootFolders) { node in
-                            NodeTreeView(
-                                node: node,
-                                selection: $selection,
-                                expandedFolders: $expandedFolders,
-                                onAddUnderFolder: { path in onAdd(path) }
-                            )
-                        }
-                        if !rootFolders.isEmpty && !rootLeaves.isEmpty {
-                            Divider()
-                        }
-                        ForEach(rootLeaves) { node in
-                            NodeTreeView(
-                                node: node,
-                                selection: $selection,
-                                expandedFolders: $expandedFolders,
-                                onAddUnderFolder: { path in onAdd(path) }
-                            )
+        VStack(spacing: 0) {
+            Group {
+                // Main List with shimmer loading or content
+                if appState.isLoading && appState.rootNodes.isEmpty {
+                    // Shimmer skeleton while loading
+                    List {
+                        ForEach(0..<8, id: \.self) { i in
+                            ShimmerListItem(isFolder: i % 3 == 0)
                         }
                     }
                     .listStyle(.sidebar)
-                    .animation(nil, value: appState.rootNodes)
-                    .animation(nil, value: expandedFolders)
-                    .focused($isListFocused)
-                    .onKeyPress(.rightArrow) {
-                        guard let id = selection,
-                              let node = findNode(id: id, in: appState.rootNodes),
-                              node.isLeaf else { return .ignored }
-                        onEnterDetail()
-                        return .handled
-                    }
-                    .onChange(of: focusRequest) { _, requested in
-                        guard requested else { return }
-                        focusRequest = false
-                        DispatchQueue.main.async {
-                            isListFocused = true
-                            // Scroll to selected item if it exists
-                            if let selectedId = selection {
-                                proxy.scrollTo(selectedId)
+                } else {
+                    ScrollViewReader { proxy in
+                        List(selection: $selection) {
+                            let rootFolders = appState.rootNodes.filter { !$0.isLeaf }
+                            let rootLeaves  = appState.rootNodes.filter {  $0.isLeaf }
+                            ForEach(rootFolders) { node in
+                                NodeTreeView(
+                                    node: node,
+                                    selection: $selection,
+                                    expandedFolders: $expandedFolders,
+                                    onAddUnderFolder: { path in onAdd(path) }
+                                )
+                            }
+                            if !rootFolders.isEmpty && !rootLeaves.isEmpty {
+                                Divider()
+                            }
+                            ForEach(rootLeaves) { node in
+                                NodeTreeView(
+                                    node: node,
+                                    selection: $selection,
+                                    expandedFolders: $expandedFolders,
+                                    onAddUnderFolder: { path in onAdd(path) }
+                                )
+                            }
+                        }
+                        .listStyle(.sidebar)
+                        .animation(nil, value: appState.rootNodes)
+                        .animation(nil, value: expandedFolders)
+                        .focused($isListFocused)
+                        .onKeyPress(.rightArrow) {
+                            guard let id = selection,
+                                  let node = findNode(id: id, in: appState.rootNodes),
+                                  node.isLeaf else { return .ignored }
+                            onEnterDetail()
+                            return .handled
+                        }
+                        .onChange(of: focusRequest) { _, requested in
+                            guard requested else { return }
+                            focusRequest = false
+                            DispatchQueue.main.async {
+                                isListFocused = true
+                                if let selectedId = selection {
+                                    proxy.scrollTo(selectedId)
+                                }
                             }
                         }
                     }
                 }
             }
+            .frame(maxHeight: .infinity)
+
+            Divider()
+
+            AddParameterFooterButton(
+                isDisabled: appState.currentConnection == nil || appState.isConnecting,
+                disabledReason: {
+                    if appState.isConnecting { return "Connecting…" }
+                    if appState.currentConnection == nil { return "Connect to a source to add parameters" }
+                    return nil
+                }(),
+                onTap: { onAdd(nil) }
+            )
         }
         .onChange(of: selection) { _, newSelection in
             // Expand all parent folders when selection changes
@@ -369,5 +383,31 @@ struct FolderRow: View {
                 onDelete()
             }
         }
+    }
+}
+
+// MARK: - Add Parameter Footer Button
+
+private struct AddParameterFooterButton: View {
+    let isDisabled: Bool
+    let disabledReason: String?
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Add Parameter")
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
+        .disabled(isDisabled)
+        .help(isDisabled ? (disabledReason ?? "Unavailable") : "Add Parameter (⇧⌘N)")
+        .padding(10)
     }
 }
