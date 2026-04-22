@@ -137,6 +137,21 @@ actor SSMService {
         }
     }
 
+    /// Fetch full metadata for a single parameter by name. Used after create to enrich the
+    /// optimistic node with fields that `PutParameter` does not return (version, ARN, tier,
+    /// lastModifiedUser, dataType, keyId, allowedPattern).
+    func describeParameterMetadata(name: String) async throws -> SSMClientTypes.ParameterMetadata? {
+        guard let client = client else { throw ServiceError.notConfigured }
+        let filter = SSMClientTypes.ParameterStringFilter(
+            key: "Name",
+            option: "Equals",
+            values: [name]
+        )
+        let input = DescribeParametersInput(maxResults: 1, parameterFilters: [filter])
+        let output = try await client.describeParameters(input: input)
+        return output.parameters?.first
+    }
+
     /// Phase 2: fetch actual values for up to 10 named parameters.
     func fetchParameterValues(names: [String]) async throws -> [SSMClientTypes.Parameter] {
         guard let client = client else { throw ServiceError.notConfigured }

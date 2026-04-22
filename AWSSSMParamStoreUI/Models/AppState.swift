@@ -366,6 +366,18 @@ class AppState: ObservableObject {
                 n.isPending = false
                 n.lastModified = createdDate
             }
+            if let meta = try? await service.describeParameterMetadata(name: path) {
+                updateNode(id: path, in: &rootNodes) { n in
+                    n.version = meta.version
+                    n.arn = meta.arn
+                    n.tier = meta.tier?.rawValue
+                    n.lastModifiedUser = meta.lastModifiedUser
+                    n.keyId = meta.keyId
+                    n.dataType = meta.dataType
+                    n.allowedPattern = meta.allowedPattern
+                    if let date = meta.lastModifiedDate { n.lastModified = date }
+                }
+            }
             showToast("Parameter added")
             return true
         } catch {
@@ -558,13 +570,39 @@ class AppState: ObservableObject {
 
     func addTag(to path: String, key: String, value: String) async {
         let tag = SSMClientTypes.Tag(key: key, value: value)
-        tagsCache[path]?.tags.append(tag)
+        let existingIndex = tagsCache[path]?.tags.firstIndex { $0.key == key }
+        let previousTag: SSMClientTypes.Tag? = existingIndex.flatMap { tagsCache[path]?.tags[$0] }
+        if let idx = existingIndex {
+            tagsCache[path]?.tags[idx] = tag
+        } else {
+            tagsCache[path]?.tags.append(tag)
+        }
         do {
             try await service.addTags(to: path, tags: [tag])
-            showToast("Tag added")
+            showToast(previousTag == nil ? "Tag added" : "Tag \"\(key)\" updated")
         } catch {
-            tagsCache[path]?.tags.removeAll { $0.key == key }
+            if let idx = existingIndex, let previousTag {
+                tagsCache[path]?.tags[idx] = previousTag
+            } else {
+                tagsCache[path]?.tags.removeAll { $0.key == key }
+            }
             errorMessage = "Failed to add tag: \(error.localizedDescription)"
+        }
+    }
+
+    func updateTag(on path: String, key: String, value: String) async {
+        let oldValue = tagsCache[path]?.tags.first { $0.key == key }?.value
+        if let idx = tagsCache[path]?.tags.firstIndex(where: { $0.key == key }) {
+            tagsCache[path]?.tags[idx] = SSMClientTypes.Tag(key: key, value: value)
+        }
+        do {
+            try await service.addTags(to: path, tags: [SSMClientTypes.Tag(key: key, value: value)])
+            showToast("Tag updated")
+        } catch {
+            if let idx = tagsCache[path]?.tags.firstIndex(where: { $0.key == key }) {
+                tagsCache[path]?.tags[idx] = SSMClientTypes.Tag(key: key, value: oldValue)
+            }
+            errorMessage = "Failed to update tag: \(error.localizedDescription)"
         }
     }
 

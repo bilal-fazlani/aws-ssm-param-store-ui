@@ -97,6 +97,7 @@ struct InfoTabView: View {
                 metadataRow("ARN", value: node.arn, monospaced: true)
             }
             .padding(12)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
     }
 
@@ -287,6 +288,10 @@ struct TagsTabView: View {
     @EnvironmentObject var appState: AppState
     @State private var newKey: String = ""
     @State private var newValue: String = ""
+    @State private var hoveredTagKey: String?
+    @State private var editingTagKey: String?
+    @State private var editingValue: String = ""
+    @State private var tagPendingDeletion: String?
 
     private var tagsState: AppState.TagsState? {
         appState.tagsCache[node.fullPath]
@@ -315,15 +320,27 @@ struct TagsTabView: View {
                                         Text(tag.key ?? "")
                                             .font(.caption.weight(.medium))
                                             .textSelection(.enabled)
-                                        Text(tag.value ?? "")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .textSelection(.enabled)
+                                        if editingTagKey == tag.key {
+                                            TextField("Value", text: $editingValue)
+                                                .font(.caption)
+                                                .textFieldStyle(.plain)
+                                                .onSubmit { commitEdit(key: tag.key!) }
+                                                .onAppear { editingValue = tag.value ?? "" }
+                                        } else {
+                                            Text(tag.value ?? "")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .textSelection(.enabled)
+                                                .onTapGesture(count: 2) {
+                                                    editingTagKey = tag.key
+                                                    editingValue = tag.value ?? ""
+                                                }
+                                        }
                                     }
                                     Spacer()
                                     Button {
                                         if let key = tag.key {
-                                            Task { await appState.removeTag(from: node.fullPath, key: key) }
+                                            tagPendingDeletion = key
                                         }
                                     } label: {
                                         Image(systemName: "xmark.circle.fill")
@@ -331,9 +348,22 @@ struct TagsTabView: View {
                                     }
                                     .buttonStyle(.plain)
                                     .help("Remove tag")
+                                    .opacity(hoveredTagKey == tag.key ? 1 : 0.3)
+                                    .animation(.easeInOut(duration: 0.15), value: hoveredTagKey)
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
+                                .contentShape(Rectangle())
+                                .onHover { isHovering in
+                                    hoveredTagKey = isHovering ? tag.key : nil
+                                }
+                                .contextMenu {
+                                    if let key = tag.key {
+                                        Button("Remove Tag", role: .destructive) {
+                                            tagPendingDeletion = key
+                                        }
+                                    }
+                                }
                                 Divider()
                             }
                         }
@@ -345,21 +375,18 @@ struct TagsTabView: View {
                 // Add tag row
                 HStack(spacing: 6) {
                     TextField("Key", text: $newKey)
-                        .textFieldStyle(.plain)
                         .font(.caption)
-                    Text("=")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
                     TextField("Value", text: $newValue)
-                        .textFieldStyle(.plain)
                         .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+                        .onSubmit { submitTag() }
                     Button {
-                        let key = newKey.trimmingCharacters(in: .whitespaces)
-                        let val = newValue.trimmingCharacters(in: .whitespaces)
-                        guard !key.isEmpty else { return }
-                        Task { await appState.addTag(to: node.fullPath, key: key, value: val) }
-                        newKey = ""
-                        newValue = ""
+                        submitTag()
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .foregroundStyle(newKey.trimmingCharacters(in: .whitespaces).isEmpty ? Color.secondary : Color.accentColor)
@@ -376,8 +403,44 @@ struct TagsTabView: View {
         .onChange(of: node.id) { _, _ in
             newKey = ""
             newValue = ""
+            editingTagKey = nil
+            tagPendingDeletion = nil
             Task { await appState.loadTags(for: node.fullPath) }
         }
+        .alert(
+            "Remove Tag",
+            isPresented: Binding(
+                get: { tagPendingDeletion != nil },
+                set: { if !$0 { tagPendingDeletion = nil } }
+            )
+        ) {
+            Button("Cancel", role: .cancel) { tagPendingDeletion = nil }
+            Button("Remove", role: .destructive) {
+                if let key = tagPendingDeletion {
+                    Task { await appState.removeTag(from: node.fullPath, key: key) }
+                }
+                tagPendingDeletion = nil
+            }
+        } message: {
+            if let key = tagPendingDeletion {
+                Text("Are you sure you want to remove the tag \"\(key)\"?")
+            }
+        }
+    }
+
+    private func submitTag() {
+        let key = newKey.trimmingCharacters(in: .whitespaces)
+        let val = newValue.trimmingCharacters(in: .whitespaces)
+        guard !key.isEmpty else { return }
+        Task { await appState.addTag(to: node.fullPath, key: key, value: val) }
+        newKey = ""
+        newValue = ""
+    }
+
+    private func commitEdit(key: String) {
+        let value = editingValue.trimmingCharacters(in: .whitespaces)
+        editingTagKey = nil
+        Task { await appState.updateTag(on: node.fullPath, key: key, value: value) }
     }
 }
 
