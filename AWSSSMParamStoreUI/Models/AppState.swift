@@ -411,7 +411,7 @@ class AppState: ObservableObject {
     func deleteFolder(_ folder: ConfigNode) async {
         var paths: [String] = []
         collectLeafPaths(folder, into: &paths)
-        removeNode(path: folder.fullPath, from: &rootNodes)
+        removeSubtree(path: folder.fullPath, from: &rootNodes)
 
         var failedCount = 0
         await withTaskGroup(of: Bool.self) { group in
@@ -552,7 +552,31 @@ class AppState: ObservableObject {
         }
         return nil
     }
-    
+
+    // Removes a node and its entire subtree by fullPath, prunes any emptied
+    // synthetic parent folders along the way. Unlike removeNode, this does not
+    // preserve children — used by deleteFolder where the whole subtree is
+    // intentionally going away.
+    @discardableResult
+    private func removeSubtree(path: String, from nodes: inout [ConfigNode]) -> ConfigNode? {
+        for i in 0..<nodes.count {
+            if nodes[i].fullPath == path {
+                let removed = nodes[i]
+                nodes.remove(at: i)
+                return removed
+            }
+            if nodes[i].children != nil {
+                if let removed = removeSubtree(path: path, from: &nodes[i].children!) {
+                    if nodes[i].children!.isEmpty && !nodes[i].isValueNode {
+                        nodes.remove(at: i)
+                    }
+                    return removed
+                }
+            }
+        }
+        return nil
+    }
+
     // MARK: - Inspector: History
 
     func loadHistory(for path: String, nodeVersion: Int?) async {
