@@ -5,6 +5,7 @@ struct SidebarView: View {
     @Binding var selection: String?
     @Binding var focusRequest: Bool
     var onEnterDetail: () -> Void = {}
+    var onAdd: (String?) -> Void = { _ in }
     @State private var expandedFolders: Set<String> = []
     @FocusState private var isListFocused: Bool
 
@@ -25,13 +26,23 @@ struct SidebarView: View {
                         let rootFolders = appState.rootNodes.filter { !$0.isLeaf }
                         let rootLeaves  = appState.rootNodes.filter {  $0.isLeaf }
                         ForEach(rootFolders) { node in
-                            NodeTreeView(node: node, selection: $selection, expandedFolders: $expandedFolders)
+                            NodeTreeView(
+                                node: node,
+                                selection: $selection,
+                                expandedFolders: $expandedFolders,
+                                onAddUnderFolder: { path in onAdd(path) }
+                            )
                         }
                         if !rootFolders.isEmpty && !rootLeaves.isEmpty {
                             Divider()
                         }
                         ForEach(rootLeaves) { node in
-                            NodeTreeView(node: node, selection: $selection, expandedFolders: $expandedFolders)
+                            NodeTreeView(
+                                node: node,
+                                selection: $selection,
+                                expandedFolders: $expandedFolders,
+                                onAddUnderFolder: { path in onAdd(path) }
+                            )
                         }
                     }
                     .listStyle(.sidebar)
@@ -121,6 +132,7 @@ struct NodeTreeView: View {
     let node: ConfigNode
     @Binding var selection: String?
     @Binding var expandedFolders: Set<String>
+    let onAddUnderFolder: (String) -> Void
     @EnvironmentObject var appState: AppState
     @State private var showDeleteConfirmation = false
     
@@ -155,12 +167,21 @@ struct NodeTreeView: View {
                 DisclosureGroup(isExpanded: isExpanded) {
                     if let children = node.children {
                         ForEach(children) { child in
-                            NodeTreeView(node: child, selection: $selection, expandedFolders: $expandedFolders)
+                            NodeTreeView(
+                                node: child,
+                                selection: $selection,
+                                expandedFolders: $expandedFolders,
+                                onAddUnderFolder: onAddUnderFolder
+                            )
                         }
                     }
                 } label: {
-                    FolderRow(node: node, onDelete: { showDeleteConfirmation = true })
-                        .tag(node.id)
+                    FolderRow(
+                        node: node,
+                        onAdd: { onAddUnderFolder(node.fullPath) },
+                        onDelete: { showDeleteConfirmation = true }
+                    )
+                    .tag(node.id)
                 }
             }
         }
@@ -288,6 +309,7 @@ struct ParameterRow: View {
 
 struct FolderRow: View {
     let node: ConfigNode
+    let onAdd: () -> Void
     let onDelete: () -> Void
 
     private var shortType: String {
