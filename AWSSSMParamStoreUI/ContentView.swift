@@ -868,6 +868,13 @@ struct AddParameterOverlay: View {
                                         RoundedRectangle(cornerRadius: 10)
                                             .strokeBorder(.separator, lineWidth: 0.5)
                                     )
+                                    // TextEditor's underlying NSTextView swallows the first ESC as
+                                    // cancelOperation:. Handle it at the SwiftUI layer so the sheet
+                                    // dismisses on a single press regardless of focus.
+                                    .onKeyPress(.escape) {
+                                        dismiss()
+                                        return .handled
+                                    }
                             }
                         }
                     }
