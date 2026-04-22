@@ -1,5 +1,26 @@
 import SwiftUI
 
+// MARK: - Delete Confirmation Text
+
+/// Builds the body of a "Delete…" alert: a headline, a newline-separated list
+/// of the first `previewLimit` parameter paths that will be removed (truncated
+/// with "…and N more" to keep the alert compact), and the standard undo
+/// warning. Used by both the sidebar context-menu delete and the ⌘⌫ shortcut.
+func deleteConfirmationMessage(for node: ConfigNode, previewLimit: Int = 5) -> String {
+    if node.isLeaf {
+        return "Are you sure you want to delete \"\(node.name)\"? This action cannot be undone."
+    }
+    let paths = node.allLeafPaths
+    let count = paths.count
+    let headline = "Are you sure you want to delete \"\(node.name)\" and all \(count) item\(count == 1 ? "" : "s") inside?"
+    var lines = Array(paths.prefix(previewLimit))
+    if paths.count > previewLimit {
+        lines.append("…and \(paths.count - previewLimit) more")
+    }
+    let preview = lines.isEmpty ? "" : "\n\n" + lines.joined(separator: "\n")
+    return headline + preview + "\n\nThis action cannot be undone."
+}
+
 struct SidebarView: View {
     @EnvironmentObject var appState: AppState
     @Binding var selection: String?
@@ -168,12 +189,7 @@ struct NodeTreeView: View {
     }
     
     private var deleteMessage: String {
-        if node.isLeaf {
-            return "Are you sure you want to delete \"\(node.name)\"? This action cannot be undone."
-        } else {
-            let count = node.totalLeafCount
-            return "Are you sure you want to delete \"\(node.name)\" and all \(count) items inside? This action cannot be undone."
-        }
+        deleteConfirmationMessage(for: node)
     }
     
     var body: some View {
