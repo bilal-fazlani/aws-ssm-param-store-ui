@@ -329,6 +329,7 @@ struct FolderRow: View {
     let node: ConfigNode
     let onAdd: () -> Void
     let onDelete: () -> Void
+    @State private var isHovered: Bool = false
 
     private var shortType: String {
         switch node.type ?? "String" {
@@ -365,18 +366,36 @@ struct FolderRow: View {
 
             Spacer()
 
-            Text("\(node.totalLeafCount)")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(
-                    Capsule()
-                        .fill(Color.secondary.opacity(0.1))
-                )
+            if isHovered {
+                Button(action: onAdd) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(HoverTintButtonStyle())
+                .help("Add parameter under \(node.fullPath)")
+                .transition(.opacity)
+            } else {
+                Text("\(node.totalLeafCount)")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule()
+                            .fill(Color.secondary.opacity(0.1))
+                    )
+                    .transition(.opacity)
+            }
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.12)) {
+                isHovered = hovering
+            }
+        }
         .contextMenu {
             Button("Copy Path", systemImage: "link") {
                 NSPasteboard.general.clearContents()
@@ -412,5 +431,30 @@ private struct AddParameterFooterButton: View {
         .disabled(disabledReason != nil)
         .help(disabledReason ?? "Add Parameter (⇧⌘N)")
         .padding(10)
+    }
+}
+
+// MARK: - Hover Tint Button Style
+
+private struct HoverTintButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HoverTintBody(configuration: configuration)
+    }
+
+    private struct HoverTintBody: View {
+        let configuration: ButtonStyle.Configuration
+        @State private var isHot: Bool = false
+
+        var body: some View {
+            configuration.label
+                .padding(2)
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(isHot ? Color.accentColor.opacity(0.18) : Color.clear)
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 5))
+                .onHover { isHot = $0 }
+                .opacity(configuration.isPressed ? 0.6 : 1)
+        }
     }
 }
