@@ -374,7 +374,14 @@ struct DetailView: View {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
                 Task {
-                    selection = nil
+                    // For a hybrid node (value that is also a folder), the node
+                    // stays in the tree after the delete — only its value side
+                    // goes. Keep selection so the detail pane flips to the
+                    // folder view instead of jumping to root.
+                    let hasChildren = node.children?.isEmpty == false
+                    if !hasChildren {
+                        selection = nil
+                    }
                     await appState.deleteParameter(path: node.fullPath)
                 }
             }
