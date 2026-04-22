@@ -354,10 +354,13 @@ class AppState: ObservableObject {
         optimisticNode.isPending = true
         optimisticNode.lastModified = Date()
 
-        // Track whether insertNode actually adds a new node. If the path already exists in
-        // the tree (e.g. user accidentally re-adds an existing parameter), insertNode is a
-        // no-op and the rollback must not remove the pre-existing node.
-        let wasNewNode = findNode(id: path, nodes: rootNodes) == nil
+        // Capture whether the path already held a value before insert. If it did,
+        // pathExists should have blocked us, but guard anyway — we don't want to
+        // clobber an existing value on rollback. If the path was absent OR was a
+        // synthetic folder, insertNode will either add a new leaf or upgrade the
+        // folder to a hybrid; in both cases removeNode reverses the change
+        // correctly (drops the leaf, or clears the value fields on the hybrid).
+        let preInsertWasValueNode = findNode(id: path, nodes: rootNodes)?.isValueNode ?? false
         insertNode(optimisticNode, into: &rootNodes)
 
         do {
@@ -381,7 +384,7 @@ class AppState: ObservableObject {
             showToast("Parameter added")
             return true
         } catch {
-            if wasNewNode {
+            if !preInsertWasValueNode {
                 removeNode(path: path, from: &rootNodes)
             }
             errorMessage = "Failed to add \"\(path.split(separator: "/").last.map(String.init) ?? path)\": \(error.localizedDescription)"
@@ -462,7 +465,31 @@ class AppState: ObservableObject {
         let nodePath = currentPath == "/" ? "/\(head)" : "\(currentPath)/\(head)"
 
         if tail.isEmpty {
-            guard !nodes.contains(where: { $0.id == nodePath }) else { return true }
+            // If a node already sits at this path, it is either a synthetic
+            // folder (no value of its own — deeper params use it as a prefix) or
+            // an actual value. Synthetic folders get upgraded to hybrid nodes
+            // by copying newNode's value fields in place, preserving children.
+            // Value nodes are left alone; callers guard this via pathExists, and
+            // silently overwriting would mask bugs.
+            if let existingIndex = nodes.firstIndex(where: { $0.id == nodePath }) {
+                if !nodes[existingIndex].isValueNode {
+                    nodes[existingIndex].value = newNode.value
+                    nodes[existingIndex].serverValue = newNode.serverValue
+                    nodes[existingIndex].type = newNode.type
+                    nodes[existingIndex].description = newNode.description
+                    nodes[existingIndex].isPending = newNode.isPending
+                    nodes[existingIndex].lastModified = newNode.lastModified
+                    nodes[existingIndex].isValueLoaded = newNode.isValueLoaded
+                    nodes[existingIndex].version = newNode.version
+                    nodes[existingIndex].arn = newNode.arn
+                    nodes[existingIndex].tier = newNode.tier
+                    nodes[existingIndex].lastModifiedUser = newNode.lastModifiedUser
+                    nodes[existingIndex].keyId = newNode.keyId
+                    nodes[existingIndex].dataType = newNode.dataType
+                    nodes[existingIndex].allowedPattern = newNode.allowedPattern
+                }
+                return true
+            }
             let insertIndex = nodes.firstIndex(where: { $0.name > head }) ?? nodes.endIndex
             nodes.insert(newNode, at: insertIndex)
             return true
@@ -486,7 +513,28 @@ class AppState: ObservableObject {
         for i in 0..<nodes.count {
             if nodes[i].fullPath == path {
                 let removed = nodes[i]
-                nodes.remove(at: i)
+                if let children = nodes[i].children, !children.isEmpty {
+                    // Hybrid node: keep the folder + its children intact, only
+                    // clear the value side. Otherwise deleting /a/b would also
+                    // lose /a/b/c (which still exists as an SSM parameter).
+                    nodes[i].value = nil
+                    nodes[i].serverValue = nil
+                    nodes[i].type = nil
+                    nodes[i].description = nil
+                    nodes[i].isPending = false
+                    nodes[i].isDirty = false
+                    nodes[i].isValueLoaded = true
+                    nodes[i].lastModified = nil
+                    nodes[i].version = nil
+                    nodes[i].arn = nil
+                    nodes[i].tier = nil
+                    nodes[i].lastModifiedUser = nil
+                    nodes[i].keyId = nil
+                    nodes[i].dataType = nil
+                    nodes[i].allowedPattern = nil
+                } else {
+                    nodes.remove(at: i)
+                }
                 return removed
             }
             if nodes[i].children != nil {
