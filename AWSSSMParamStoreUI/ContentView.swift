@@ -209,6 +209,16 @@ struct ContentView: View {
         .onChange(of: showingAddSheet) { _, isShowing in
             if !isShowing { pendingAddParentPath = nil }
         }
+        .background {
+            Button("") {
+                pendingAddParentPath = nil
+                showingAddSheet = true
+            }
+            .keyboardShortcut("n", modifiers: [.command, .shift])
+            .opacity(0)
+            .frame(width: 0, height: 0)
+            .disabled(appState.currentConnection == nil)
+        }
         .navigationTitle(windowTitle)
         .navigationSubtitle(lastUpdatedText)
         .toast(message: $appState.toastMessage, icon: "arrow.triangle.2.circlepath")
@@ -263,19 +273,8 @@ struct ContentView: View {
             }
             
 
-            // Center group: Add, Connection, Region, Refresh, Info
+            // Center group: Connection, Region, Refresh, Info
             ToolbarItemGroup(placement: .principal) {
-                // Add button
-                Button {
-                    showingAddSheet = true
-                } label: {
-                    Label("Add", systemImage: "plus")
-                        .labelStyle(.titleAndIcon)
-                }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-                .help("Add new parameter (⇧⌘N)")
-                .disabled(appState.currentConnection == nil)
-
                 // Connection selector dropdown
                 Menu {
                     if connectionStore.connections.isEmpty {
