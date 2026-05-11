@@ -59,7 +59,7 @@ Provide a sheet-based, interactive graph view that lets the user **see all param
 - Right-click folder → "View in Explorer" → close sheet and reveal the folder in the sidebar (selected and scrolled into view, expanded).
 
 ### 3.5 Collapsing / expanding folders
-- `GraphViewModel.collapsedFolderIds: Set<UUID>` is the source of truth.
+- `GraphViewModel.collapsedFolderIds: Set<String>` (set of `ConfigNode.id`, which is the full path) is the source of truth.
 - Double-click a folder, or right-click → Expand / Collapse, calls `viewModel.toggleCollapse(folderId:)`.
 - On collapse: descendants' sprites, edges, and physics bodies are removed from the scene. The folder shows a `+N` badge where N is the count of hidden descendants (computed from the model tree).
 - On expand: descendants are re-instantiated and re-joined. Physics resumes briefly to settle the new bodies, then auto-freezes again.
@@ -95,7 +95,7 @@ All under `AWSSSMParamStoreUI/Views/Graph/`:
 
 | File | Change |
 |------|--------|
-| `Views/ContentView.swift` | Add toolbar button "Graph" (disabled when `appState.activeConnection == nil`); wire `.sheet(isPresented:)`. |
+| `Views/ContentView.swift` | Add toolbar button "Graph" (disabled when `appState.currentConnection == nil` or `!appState.isConnected`); wire `.sheet(isPresented:)`. |
 | `AWSSSMParamStoreUIApp.swift` | Add `View → Show Graph` menu command bound to ⌘G with the same disabled rule. |
 
 No changes to `AppState`, `ConfigNode`, `SSMService`, or any data layer. The graph is a pure read-only visualization built from a snapshot of the existing tree.
