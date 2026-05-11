@@ -30,7 +30,7 @@ final class GraphNodeSprite: SKNode {
         labelNode.horizontalAlignmentMode = .center
         labelNode.position = CGPoint(x: 0, y: radius + 12)
 
-        let labelSize = labelNode.calculateAccumulatedFrame().size.applying(CGAffineTransform(scaleX: 1, y: 1))
+        let labelSize = labelNode.calculateAccumulatedFrame().size
         labelBackground = SKShapeNode(rectOf: CGSize(width: labelSize.width + 8, height: labelSize.height + 4),
                                       cornerRadius: 3)
         labelBackground.fillColor = theme.labelBackground
