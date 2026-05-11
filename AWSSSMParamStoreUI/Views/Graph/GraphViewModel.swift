@@ -1,11 +1,10 @@
 import Foundation
-import SwiftUI
 import Combine
 
 @MainActor
 final class GraphViewModel: ObservableObject {
     @Published private(set) var snapshot: GraphSnapshot = GraphSnapshot(nodes: [], edges: [])
-    @Published var collapsedFolderIds: Set<String> = []
+    @Published private(set) var collapsedFolderIds: Set<String> = []
     @Published var selectedNodeId: String?
     @Published var hoveredNodeId: String?
     @Published var searchText: String = ""
@@ -26,7 +25,6 @@ final class GraphViewModel: ObservableObject {
         }
     }
 
-    /// IDs of nodes that are inside (transitively) any collapsed folder.
     private var hiddenNodeIds: Set<String> {
         guard !collapsedFolderIds.isEmpty else { return [] }
         let parentToChildren: [String: [String]] = Dictionary(
