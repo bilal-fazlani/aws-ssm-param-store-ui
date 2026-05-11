@@ -14,6 +14,8 @@ final class GraphScene: SKScene {
 
     weak var viewModel: GraphViewModel?
 
+    var onNavigateToLeaf: ((String) -> Void)?
+
     private var lowEnergyFrames: Int = 0
     private let energyThreshold: CGFloat = 0.5
     private let framesToFreeze: Int = 30
@@ -180,8 +182,16 @@ final class GraphScene: SKScene {
     }
 
     private func handleDoubleClick(at point: CGPoint) {
-        // Filled in Task 13.
-        _ = point
+        guard let sprite = sprite(at: point) else { return }
+        switch sprite.kind {
+        case .leaf:
+            onNavigateToLeaf?(sprite.snapshotNodeId)
+        case .folder:
+            viewModel?.toggleCollapse(folderId: sprite.snapshotNodeId)
+            rebuild()
+        case .home:
+            break
+        }
     }
 
     func refreshSelectionVisuals() {
