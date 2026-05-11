@@ -14,6 +14,10 @@ final class GraphScene: SKScene {
 
     weak var viewModel: GraphViewModel?
 
+    private var lowEnergyFrames: Int = 0
+    private let energyThreshold: CGFloat = 0.5
+    private let framesToFreeze: Int = 30
+
     override init(size: CGSize) {
         super.init(size: size)
         scaleMode = .resizeFill
@@ -42,8 +46,21 @@ final class GraphScene: SKScene {
     }
 
     override func update(_ currentTime: TimeInterval) {
-        for edge in edgeSprites {
-            edge.updatePath()
+        for edge in edgeSprites { edge.updatePath() }
+
+        guard physicsWorld.speed > 0 else { return }
+        var energy: CGFloat = 0
+        for sprite in nodeSprites.values {
+            guard let v = sprite.physicsBody?.velocity else { continue }
+            energy += v.dx * v.dx + v.dy * v.dy
+        }
+        if energy < energyThreshold {
+            lowEnergyFrames += 1
+            if lowEnergyFrames >= framesToFreeze {
+                physicsWorld.speed = 0
+            }
+        } else {
+            lowEnergyFrames = 0
         }
     }
 
@@ -100,5 +117,8 @@ final class GraphScene: SKScene {
 
         cameraNode.position = .zero
         cameraNode.setScale(1.0)
+
+        physicsWorld.speed = 1
+        lowEnergyFrames = 0
     }
 }
