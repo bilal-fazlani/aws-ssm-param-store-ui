@@ -107,6 +107,13 @@ final class GraphNodeSprite: SKNode {
         searchRing.isHidden = !highlighted
     }
 
+    func recolor(snapshotNode: GraphSnapshot.Node, theme: GraphTheme) {
+        circle.fillColor = Self.color(for: snapshotNode, theme: theme)
+        labelNode.fontColor = theme.labelColor
+        labelBackground.fillColor = theme.labelBackground
+        selectionRing.strokeColor = theme.selectionRingColor
+    }
+
     func setLabelVisible(_ visible: Bool) {
         labelNode.isHidden = !visible
         labelBackground.isHidden = !visible

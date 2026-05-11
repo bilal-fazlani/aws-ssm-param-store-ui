@@ -56,7 +56,11 @@ final class GraphScene: SKScene {
     private func applyTheme() {
         backgroundColor = theme.canvasBackground
         for edge in edgeSprites { edge.strokeColor = theme.edgeColor }
-        // Sprite recoloring lands in Task 22.
+        guard let vm = viewModel else { return }
+        for (id, sprite) in nodeSprites {
+            guard let snapshotNode = vm.snapshot.nodes.first(where: { $0.id == id }) else { continue }
+            sprite.recolor(snapshotNode: snapshotNode, theme: theme)
+        }
     }
 
     override func update(_ currentTime: TimeInterval) {
