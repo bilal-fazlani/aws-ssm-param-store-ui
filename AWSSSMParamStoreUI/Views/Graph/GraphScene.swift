@@ -15,6 +15,7 @@ final class GraphScene: SKScene {
     weak var viewModel: GraphViewModel?
 
     var onNavigateToLeaf: ((String) -> Void)?
+    var onRevealInExplorer: ((String) -> Void)?
 
     private var lowEnergyFrames: Int = 0
     private let energyThreshold: CGFloat = 0.5
@@ -201,6 +202,53 @@ final class GraphScene: SKScene {
             sprite.setSelected(id == selected)
             sprite.setDimmed(dimming && id != selected)
         }
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        let point = event.location(in: self)
+        guard let sprite = sprite(at: point), let view = self.view else { return }
+        let menu = NSMenu()
+        switch sprite.kind {
+        case .folder:
+            let id = sprite.snapshotNodeId
+            let isCollapsed = viewModel?.collapsedFolderIds.contains(id) == true
+            let collapseExpand = NSMenuItem(
+                title: isCollapsed ? "Expand" : "Collapse",
+                action: #selector(menuToggleCollapse(_:)),
+                keyEquivalent: ""
+            )
+            collapseExpand.target = self
+            collapseExpand.representedObject = id
+            menu.addItem(collapseExpand)
+            menu.addItem(.separator())
+            let reveal = NSMenuItem(title: "View in Explorer",
+                                    action: #selector(menuRevealInExplorer(_:)),
+                                    keyEquivalent: "")
+            reveal.target = self
+            reveal.representedObject = id
+            menu.addItem(reveal)
+        case .leaf:
+            let reveal = NSMenuItem(title: "View in Explorer",
+                                    action: #selector(menuRevealInExplorer(_:)),
+                                    keyEquivalent: "")
+            reveal.target = self
+            reveal.representedObject = sprite.snapshotNodeId
+            menu.addItem(reveal)
+        case .home:
+            return
+        }
+        NSMenu.popUpContextMenu(menu, with: event, for: view)
+    }
+
+    @objc private func menuToggleCollapse(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        viewModel?.toggleCollapse(folderId: id)
+        rebuild()
+    }
+
+    @objc private func menuRevealInExplorer(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        onRevealInExplorer?(id)
     }
 
     func handleMouseMoved(toScenePoint point: CGPoint) {
