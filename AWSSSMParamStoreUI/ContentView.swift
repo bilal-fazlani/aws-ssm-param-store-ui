@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showDeleteConfirmation = false
     @State private var lastConnectWasFromSheet = false
     @State private var hybridDetailMode: HybridDetailMode = .value
+    @State private var showingGraph = false
 
     private var parentId: String? {
         guard let selection = selection else { return nil }
@@ -393,6 +394,16 @@ struct ContentView: View {
                 }
             }
 
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    showingGraph = true
+                } label: {
+                    Image(systemName: "circle.hexagongrid")
+                }
+                .disabled(appState.currentConnection == nil || !appState.isConnected)
+                .help("Show Graph (⌘G)")
+            }
+
             // Right side: Inspector toggle (isolated)
             ToolbarItem(placement: .automatic) {
                 let hasValueNode = selection.flatMap { findNode(id: $0, nodes: appState.rootNodes) }?.isValueNode == true
@@ -418,6 +429,10 @@ struct ContentView: View {
                     Task { await appState.connect(to: connection) }
                 }
             )
+        }
+        .sheet(isPresented: $showingGraph) {
+            GraphSheet()
+                .environmentObject(appState)
         }
         .onChange(of: showingSettings) { _, isShowing in
             guard !isShowing else { return }
