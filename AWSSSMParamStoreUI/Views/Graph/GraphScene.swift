@@ -291,6 +291,62 @@ final class GraphScene: SKScene {
         ]))
     }
 
+    struct MiniMapSnapshot {
+        let nodePositions: [CGPoint]
+        let allBounds: CGRect
+        let viewport: CGRect
+    }
+
+    func miniMapSnapshot() -> MiniMapSnapshot {
+        var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
+        var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
+        var positions: [CGPoint] = []
+        positions.reserveCapacity(nodeSprites.count)
+        for sprite in nodeSprites.values {
+            positions.append(sprite.position)
+            minX = min(minX, sprite.position.x); minY = min(minY, sprite.position.y)
+            maxX = max(maxX, sprite.position.x); maxY = max(maxY, sprite.position.y)
+        }
+        let bounds = (positions.isEmpty)
+            ? CGRect(x: -100, y: -100, width: 200, height: 200)
+            : CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        let viewSize = view?.bounds.size ?? size
+        let halfW = viewSize.width * cameraNode.xScale * 0.5
+        let halfH = viewSize.height * cameraNode.yScale * 0.5
+        let vp = CGRect(x: cameraNode.position.x - halfW,
+                        y: cameraNode.position.y - halfH,
+                        width: halfW * 2,
+                        height: halfH * 2)
+        return MiniMapSnapshot(nodePositions: positions, allBounds: bounds, viewport: vp)
+    }
+
+    func exportCurrentSceneAsSVG() -> String {
+        let posNodes: [GraphSVGExporter.PositionedNode] = nodeSprites.values.map { sprite in
+            let snapshotNode = viewModel?.snapshot.nodes.first(where: { $0.id == sprite.snapshotNodeId })
+            let color = snapshotNode.map { GraphNodeSprite.color(for: $0, theme: theme) } ?? .gray
+            return GraphSVGExporter.PositionedNode(
+                id: sprite.snapshotNodeId,
+                x: Double(sprite.position.x),
+                y: Double(-sprite.position.y),
+                radius: Double(GraphNodeSprite.radius(for: sprite.kind)),
+                fillHex: color.toHex(),
+                label: snapshotNode?.label ?? ""
+            )
+        }
+        let posEdges: [GraphSVGExporter.PositionedEdge] = edgeSprites.compactMap { edge in
+            guard let from = edge.fromNode, let to = edge.toNode else { return nil }
+            return GraphSVGExporter.PositionedEdge(
+                x1: Double(from.position.x), y1: Double(-from.position.y),
+                x2: Double(to.position.x), y2: Double(-to.position.y)
+            )
+        }
+        return GraphSVGExporter.export(
+            nodes: posNodes, edges: posEdges,
+            edgeColorHex: theme.edgeColor.toHex(),
+            backgroundHex: theme.canvasBackground.toHex()
+        )
+    }
+
     func handleMouseMoved(toScenePoint point: CGPoint) {
         guard let vm = viewModel else { return }
         let hovered = sprite(at: point)?.snapshotNodeId
@@ -358,5 +414,15 @@ final class GraphScene: SKScene {
         let move = SKAction.move(to: .zero, duration: animated ? 0.3 : 0)
         let zoom = SKAction.scale(to: 1.0, duration: animated ? 0.3 : 0)
         cameraNode.run(SKAction.group([move, zoom])) { [weak self] in self?.updateLabelLOD() }
+    }
+}
+
+private extension NSColor {
+    func toHex() -> String {
+        guard let rgb = usingColorSpace(.sRGB) else { return "#000000" }
+        let r = Int(round(rgb.redComponent * 255))
+        let g = Int(round(rgb.greenComponent * 255))
+        let b = Int(round(rgb.blueComponent * 255))
+        return String(format: "#%02x%02x%02x", r, g, b)
     }
 }
