@@ -26,7 +26,7 @@ struct GraphSheet: View {
             if viewModel.snapshot.nodes.count <= 1 {
                 emptyState
             } else {
-                SpriteView(scene: scene, options: [.allowsTransparency])
+                HoverTrackingSpriteView(scene: scene)
                     .ignoresSafeArea()
 
                 if !isSettled {
