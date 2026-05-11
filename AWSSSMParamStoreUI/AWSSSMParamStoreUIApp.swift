@@ -31,6 +31,13 @@ struct AWSSSMParamStoreUIApp: App {
                 }
                 .keyboardShortcut("n", modifiers: [.command])
             }
+            CommandGroup(after: .windowArrangement) {
+                Button("Show Graph") {
+                    appState?.showGraphRequested = true
+                }
+                .keyboardShortcut("g", modifiers: [.command])
+                .disabled(appState?.currentConnection == nil || appState?.isConnected != true)
+            }
             CommandGroup(after: .help) {
                 Button("What's New?") {
                     appState?.showReleaseNotes()

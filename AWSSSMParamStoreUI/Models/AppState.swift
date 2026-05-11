@@ -27,6 +27,7 @@ class AppState: ObservableObject {
 
     // MARK: - Inspector
     @Published var isInspectorPresented: Bool = false
+    @Published var showGraphRequested: Bool = false
     @Published var historyCache: [String: ParameterHistoryCache] = [:]
     @Published var tagsCache: [String: TagsState] = [:]
 

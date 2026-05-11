@@ -434,6 +434,12 @@ struct ContentView: View {
             GraphSheet()
                 .environmentObject(appState)
         }
+        .onChange(of: appState.showGraphRequested) { _, requested in
+            if requested {
+                showingGraph = true
+                appState.showGraphRequested = false
+            }
+        }
         .onChange(of: showingSettings) { _, isShowing in
             guard !isShowing else { return }
             defer { lastConnectWasFromSheet = false }
