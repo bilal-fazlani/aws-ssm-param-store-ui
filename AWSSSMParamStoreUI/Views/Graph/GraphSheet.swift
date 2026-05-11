@@ -19,6 +19,7 @@ struct GraphSheet: View {
     @State private var miniMapNodePositions: [CGPoint] = []
     @State private var miniMapAllBounds: CGRect = .zero
     @State private var miniMapViewport: CGRect = .zero
+    @State private var isSettled = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -27,6 +28,20 @@ struct GraphSheet: View {
             } else {
                 SpriteView(scene: scene, options: [.allowsTransparency])
                     .ignoresSafeArea()
+
+                if !isSettled {
+                    VStack {
+                        Text("Arranging…")
+                            .font(.caption)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(.ultraThinMaterial, in: Capsule())
+                            .padding(.top, 60)
+                            .padding(.leading, 16)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(.opacity)
+                }
 
                 toolbar
                     .padding(.horizontal, 12)
@@ -126,6 +141,9 @@ struct GraphSheet: View {
         scene.onRevealInExplorer = { nodeId in
             appState.selectedNodeId = nodeId
             dismiss()
+        }
+        scene.onSettleChange = { settled in
+            DispatchQueue.main.async { withAnimation { isSettled = settled } }
         }
     }
 

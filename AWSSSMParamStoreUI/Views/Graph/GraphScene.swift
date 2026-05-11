@@ -16,6 +16,13 @@ final class GraphScene: SKScene {
 
     var onNavigateToLeaf: ((String) -> Void)?
     var onRevealInExplorer: ((String) -> Void)?
+    var onSettleChange: ((Bool) -> Void)?
+
+    private var isSettled: Bool = false {
+        didSet {
+            if isSettled != oldValue { onSettleChange?(isSettled) }
+        }
+    }
 
     private var lowEnergyFrames: Int = 0
     private let energyThreshold: CGFloat = 0.5
@@ -65,6 +72,7 @@ final class GraphScene: SKScene {
             lowEnergyFrames += 1
             if lowEnergyFrames >= framesToFreeze {
                 physicsWorld.speed = 0
+                isSettled = true
             }
         } else {
             lowEnergyFrames = 0
@@ -127,6 +135,7 @@ final class GraphScene: SKScene {
 
         physicsWorld.speed = 1
         lowEnergyFrames = 0
+        isSettled = false
     }
 
     override func mouseDown(with event: NSEvent) {
