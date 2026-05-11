@@ -251,6 +251,46 @@ final class GraphScene: SKScene {
         onRevealInExplorer?(id)
     }
 
+    func applySearchHighlights() {
+        guard let vm = viewModel else { return }
+        let matches = vm.matchingNodeIds
+        let hasSearch = !matches.isEmpty
+        for (id, sprite) in nodeSprites {
+            if hasSearch {
+                let isMatch = matches.contains(id)
+                sprite.setSearchHighlighted(isMatch)
+                sprite.setDimmed(!isMatch)
+            } else {
+                sprite.setSearchHighlighted(false)
+                let selected = vm.selectedNodeId
+                sprite.setDimmed(selected != nil && selected != id)
+            }
+        }
+    }
+
+    func fitToMatches(animated: Bool) {
+        guard let vm = viewModel else { return }
+        let matches = vm.matchingNodeIds
+        guard !matches.isEmpty else { return }
+        var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
+        var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
+        for id in matches {
+            guard let s = nodeSprites[id] else { continue }
+            minX = min(minX, s.position.x); minY = min(minY, s.position.y)
+            maxX = max(maxX, s.position.x); maxY = max(maxY, s.position.y)
+        }
+        let pad: CGFloat = 60
+        let w = (maxX - minX) + 2 * pad
+        let h = (maxY - minY) + 2 * pad
+        let viewSize = view?.bounds.size ?? size
+        let scale = max(w / viewSize.width, h / viewSize.height, 0.1)
+        let center = CGPoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
+        cameraNode.run(SKAction.group([
+            SKAction.move(to: center, duration: animated ? 0.3 : 0),
+            SKAction.scale(to: max(0.1, min(4.0, scale)), duration: animated ? 0.3 : 0)
+        ]))
+    }
+
     func handleMouseMoved(toScenePoint point: CGPoint) {
         guard let vm = viewModel else { return }
         let hovered = sprite(at: point)?.snapshotNodeId

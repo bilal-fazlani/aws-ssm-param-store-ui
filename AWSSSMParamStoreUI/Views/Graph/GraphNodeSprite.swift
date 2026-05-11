@@ -88,8 +88,23 @@ final class GraphNodeSprite: SKNode {
         }
     }
 
+    private lazy var searchRing: SKShapeNode = {
+        let r = SKShapeNode(circleOfRadius: Self.radius(for: kind) + 3)
+        r.strokeColor = NSColor.systemTeal
+        r.lineWidth = 2
+        r.fillColor = .clear
+        r.glowWidth = 2
+        r.isHidden = true
+        addChild(r)
+        return r
+    }()
+
     func setSelected(_ selected: Bool) {
         selectionRing.isHidden = !selected
+    }
+
+    func setSearchHighlighted(_ highlighted: Bool) {
+        searchRing.isHidden = !highlighted
     }
 
     func setLabelVisible(_ visible: Bool) {
