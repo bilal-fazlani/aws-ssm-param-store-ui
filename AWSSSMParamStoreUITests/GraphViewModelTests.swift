@@ -52,4 +52,27 @@ import Testing
         #expect(vm.visibleNodes.count == 4) // home + /app1 + /app2 + /app2/key
         #expect(vm.hiddenDescendantCount(forFolderId: "/app1") == 3)
     }
+
+    @Test func empty_search_text_returns_empty_match_set() {
+        let vm = makeViewModel()
+        vm.searchText = ""
+        #expect(vm.matchingNodeIds.isEmpty)
+    }
+
+    @Test func search_substring_matches_full_path_case_insensitively() {
+        let vm = makeViewModel()
+        vm.searchText = "DB"
+        let matches = vm.matchingNodeIds
+        #expect(matches.contains("/app1/db"))
+        #expect(matches.contains("/app1/db/host"))
+        #expect(matches.contains("/app1/db/port"))
+        #expect(!matches.contains("/app2/key"))
+    }
+
+    @Test func search_does_not_match_home_node() {
+        let vm = makeViewModel()
+        vm.searchText = "prod"
+        // Even though connection name is "prod", we don't match home.
+        #expect(!vm.matchingNodeIds.contains(GraphSnapshot.homeId))
+    }
 }

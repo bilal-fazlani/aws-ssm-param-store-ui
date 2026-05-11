@@ -54,6 +54,21 @@ final class GraphViewModel: ObservableObject {
         return snapshot.edges.filter { !hidden.contains($0.fromId) && !hidden.contains($0.toId) }
     }
 
+    /// IDs of nodes whose full path contains `searchText` (case-insensitive, trimmed).
+    /// Empty when `searchText` is blank. Excludes the synthetic home node.
+    var matchingNodeIds: Set<String> {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        let needle = trimmed.lowercased()
+        var matches: Set<String> = []
+        for node in snapshot.nodes where node.kind != .home {
+            if node.fullPath.lowercased().contains(needle) {
+                matches.insert(node.id)
+            }
+        }
+        return matches
+    }
+
     func hiddenDescendantCount(forFolderId folderId: String) -> Int {
         guard collapsedFolderIds.contains(folderId) else { return 0 }
         let parentToChildren: [String: [String]] = Dictionary(
