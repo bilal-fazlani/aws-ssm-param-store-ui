@@ -19,6 +19,8 @@ final class GraphScene: SKScene {
     private let framesToFreeze: Int = 30
 
     private var dragLastPoint: CGPoint?
+    private var mouseDownPoint: CGPoint?
+    private var mouseDownTime: TimeInterval = 0
 
     override init(size: CGSize) {
         super.init(size: size)
@@ -125,6 +127,8 @@ final class GraphScene: SKScene {
     }
 
     override func mouseDown(with event: NSEvent) {
+        mouseDownPoint = event.location(in: self)
+        mouseDownTime = event.timestamp
         dragLastPoint = event.location(in: self)
     }
 
@@ -139,7 +143,67 @@ final class GraphScene: SKScene {
     }
 
     override func mouseUp(with event: NSEvent) {
-        dragLastPoint = nil
+        defer { dragLastPoint = nil; mouseDownPoint = nil }
+        guard let down = mouseDownPoint else { return }
+        let up = event.location(in: self)
+        let dist = hypot(up.x - down.x, up.y - down.y)
+        let elapsed = event.timestamp - mouseDownTime
+        if dist < 4 && elapsed < 0.4 {
+            if event.clickCount >= 2 {
+                handleDoubleClick(at: up)
+            } else {
+                handleSingleClick(at: up)
+            }
+        }
+    }
+
+    private func sprite(at point: CGPoint) -> GraphNodeSprite? {
+        let hit = nodes(at: point).compactMap { node -> GraphNodeSprite? in
+            var n: SKNode? = node
+            while n != nil {
+                if let g = n as? GraphNodeSprite { return g }
+                n = n?.parent
+            }
+            return nil
+        }
+        return hit.first
+    }
+
+    private func handleSingleClick(at point: CGPoint) {
+        guard let vm = viewModel else { return }
+        if let sprite = sprite(at: point) {
+            vm.selectedNodeId = sprite.snapshotNodeId
+        } else {
+            vm.selectedNodeId = nil
+        }
+        refreshSelectionVisuals()
+    }
+
+    private func handleDoubleClick(at point: CGPoint) {
+        // Filled in Task 13.
+        _ = point
+    }
+
+    func refreshSelectionVisuals() {
+        let selected = viewModel?.selectedNodeId
+        let dimming = selected != nil
+        for (id, sprite) in nodeSprites {
+            sprite.setSelected(id == selected)
+            sprite.setDimmed(dimming && id != selected)
+        }
+    }
+
+    func handleMouseMoved(toScenePoint point: CGPoint) {
+        guard let vm = viewModel else { return }
+        let hovered = sprite(at: point)?.snapshotNodeId
+        if hovered == vm.hoveredNodeId { return }
+        if let prevId = vm.hoveredNodeId, let prev = nodeSprites[prevId], prev.kind != .home {
+            prev.setLabelVisible(cameraNode.xScale < 0.6)
+        }
+        vm.hoveredNodeId = hovered
+        if let id = hovered, let sprite = nodeSprites[id], sprite.kind != .home {
+            sprite.setLabelVisible(true)
+        }
     }
 
     override func scrollWheel(with event: NSEvent) {
