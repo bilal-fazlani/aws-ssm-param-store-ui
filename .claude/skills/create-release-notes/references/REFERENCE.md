@@ -4,7 +4,7 @@
 
 The release workflow at `.github/workflows/release.yml` looks for a file at `release_notes/v$VERSION.md` during the "Prepare release notes" step. If found, it becomes the body of the GitHub Release. GitHub's `generate_release_notes: true` flag appends auto-generated contributor/PR info after it.
 
-The "What's New" overlay in the app fetches the release body from the GitHub Releases API and renders it with Textual's `StructuredText(markdown:)`. This means the release notes must be valid markdown that reads well in both GitHub's web UI and inside the app's glass overlay.
+The "What's New" overlay in the app fetches the release body from the GitHub Releases API and renders it with SwiftUI's `StructuredText(markdown:)`. This means the release notes must be valid markdown that reads well in both GitHub's web UI and inside the app's glass overlay.
 
 ## File naming
 
