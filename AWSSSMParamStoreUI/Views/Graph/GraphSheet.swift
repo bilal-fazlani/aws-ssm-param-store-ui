@@ -97,6 +97,11 @@ struct GraphSheet: View {
 
             Spacer()
 
+            Text(nodeCountSummary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help("Total parameters / folders in this connection")
+
             Button(action: { scene.fitToView(animated: true) }) {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
             }
@@ -146,6 +151,19 @@ struct GraphSheet: View {
         scene.onSettleChange = { settled in
             DispatchQueue.main.async { withAnimation { isSettled = settled } }
         }
+    }
+
+    private var nodeCountSummary: String {
+        var params = 0
+        var folders = 0
+        for node in viewModel.snapshot.nodes {
+            switch node.kind {
+            case .leaf: params += 1
+            case .folder: folders += 1
+            case .home: break
+            }
+        }
+        return "\(params) params · \(folders) folders"
     }
 
     private var selectedConfigNode: ConfigNode? {

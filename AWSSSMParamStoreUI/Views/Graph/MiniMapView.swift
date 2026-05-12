@@ -5,6 +5,9 @@ struct MiniMapView: View {
     let viewportRect: CGRect
     let allBounds: CGRect
 
+    @State private var dragOffset: CGSize = .zero
+    @GestureState private var liveDrag: CGSize = .zero
+
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -30,6 +33,18 @@ struct MiniMapView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 6)
                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+        .offset(x: dragOffset.width + liveDrag.width,
+                y: dragOffset.height + liveDrag.height)
+        .gesture(
+            DragGesture()
+                .updating($liveDrag) { value, state, _ in
+                    state = value.translation
+                }
+                .onEnded { value in
+                    dragOffset.width += value.translation.width
+                    dragOffset.height += value.translation.height
+                }
         )
     }
 

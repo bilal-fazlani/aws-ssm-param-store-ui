@@ -26,8 +26,8 @@ final class GraphScene: SKScene {
     }
 
     private var lowEnergyFrames: Int = 0
-    private let energyThreshold: CGFloat = 0.5
-    private let framesToFreeze: Int = 30
+    private let energyThreshold: CGFloat = 8
+    private let framesToFreeze: Int = 12
 
     private var dragLastPoint: CGPoint?
     private var mouseDownPoint: CGPoint?
@@ -45,8 +45,8 @@ final class GraphScene: SKScene {
         camera = cameraNode
 
         centerField = SKFieldNode.radialGravityField()
-        centerField.strength = -0.6
-        centerField.falloff = -1
+        centerField.strength = -3.0
+        centerField.falloff = 1
         centerField.position = .zero
         centerField.categoryBitMask = 0x1
         addChild(centerField)
@@ -129,8 +129,8 @@ final class GraphScene: SKScene {
                     withBodyA: bodyA, bodyB: bodyB,
                     anchorA: a.position, anchorB: b.position
                 )
-                joint.frequency = 1.5
-                joint.damping = 1.2
+                joint.frequency = 3.0
+                joint.damping = 2.0
                 physicsWorld.add(joint)
             }
         }
@@ -375,8 +375,11 @@ final class GraphScene: SKScene {
     }
 
     override func scrollWheel(with event: NSEvent) {
-        let zoomFactor: CGFloat = 1 + CGFloat(event.deltaY) * 0.04
-        applyZoom(zoomFactor, around: event.location(in: self))
+        let scale = cameraNode.xScale
+        let dx = event.scrollingDeltaX * scale
+        let dy = event.scrollingDeltaY * scale
+        cameraNode.position = CGPoint(x: cameraNode.position.x - dx,
+                                      y: cameraNode.position.y + dy)
     }
 
     override func magnify(with event: NSEvent) {
