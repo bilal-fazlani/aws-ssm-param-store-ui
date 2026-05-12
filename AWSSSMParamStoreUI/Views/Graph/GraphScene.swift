@@ -1,6 +1,7 @@
 import SpriteKit
 import SwiftUI
 
+@MainActor
 final class GraphScene: SKScene {
     var theme: GraphTheme = GraphTheme(colorScheme: .dark) {
         didSet { applyTheme() }

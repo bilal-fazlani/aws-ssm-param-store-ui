@@ -93,6 +93,7 @@ struct GraphSheet: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 320)
                 .onSubmit { scene.fitToMatches(animated: true) }
+                .keyboardShortcut("f", modifiers: .command)
 
             Spacer()
 
